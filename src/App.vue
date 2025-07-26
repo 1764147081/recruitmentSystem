@@ -7,8 +7,10 @@
         <Avatar/>
       </el-header>
       <el-container>
-        <el-aside width="200px">
-          <Collapse></Collapse>
+        <el-aside >
+        <!-- width="200px" v-for="(item,index) of $store.state.userRouters"  -->
+        
+          <!-- <Collapse :key="index" :item="item" /> -->
         </el-aside>
         <el-main>
           <RouterView />
@@ -36,31 +38,39 @@ import Collapse from './components/Collapse.vue';
 
 }
 
-.all {
-  height: 98vh;
-  width: 100vw;
-  max-width: 100%;
-  /* 防止内部元素导致溢出 */
-  max-height: 100%;
-}
-
 .el-header {
+  position: fixed;
   background-color: rgba(159, 35, 26, 1);
-  height: 14vh;
+  height: 100px;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: 100%;
   border-top-left-radius: 25px;
   border-top-right-radius: 25px;
 
 }
 
 .el-aside {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1;
   border: 2px solid rgba(204, 204, 204, 1);
-  height: 84vh;
-  width: 30vh;
+  height: 100%;
+  width: 200px;
+  padding-top: 120px;
 }
 
 .el-main {
   border: 2px solid rgba(204, 204, 204, 1);
   border-bottom-right-radius: 25px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 120px 30px 30px 230px; 
 }
 .name{
   font-size: 20px;
