@@ -1,5 +1,7 @@
 <template>
-  <router-view ></router-view>
+  <router-view >
+  
+  </router-view>
 </template>
 
 
@@ -9,6 +11,7 @@ import router from './router';
 
 
 </script>
+
 
 <style scoped>
 

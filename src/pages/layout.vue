@@ -1,10 +1,13 @@
 <template>
   <div class="common-layout">
     <el-container>
-      <el-header>
+      <el-header class="header-container">
         <img src='@/assets/logo.png' alt="logo" id="logo"></img>
         <div class="name">yourName</div>
         <Avatar/>
+        <RouterLink :to="{name:'login'}">
+          <el-button>登录</el-button>
+        </RouterLink>
       </el-header>
       <el-container>
         <el-aside >
@@ -13,27 +16,34 @@
           <!-- <Collapse :key="index" :item="item" /> -->
         </el-aside>
         <el-main>
-          <RouterView />
+
         </el-main>
       </el-container>
     </el-container>
   </div>
 </template>
 <script setup lang="ts">
-import Avatar from '@/components/Avatar.vue';
-import Collapse from './components/Collapse.vue';
+import { RouterLink } from 'vue-router'
+//import Avatar from '@/components/Avatar.vue';
+//import Collapse from './components/Collapse.vue';
 </script>
 <style scoped>
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
 #logo {
   height: 60px;
-  position: fixed;
-  top: 20px;
-  left: 30px;
-
+  
 }
 
 .el-header {
   position: fixed;
+ 
   background-color: rgba(159, 35, 26, 1);
   height: 100px;
   top: 0;
@@ -68,9 +78,6 @@ import Collapse from './components/Collapse.vue';
 }
 .name{
   font-size: 20px;
-  height: 20px;
-  width:100px;
-  margin-left: 85vw;
-  margin-top: -7vh;
+  
 }
 </style>
