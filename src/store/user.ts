@@ -8,6 +8,11 @@ export  const useUserStore = defineStore('user', {
       changePassword(value:string){
          this.password=value
       },
+      changeToken(value:string){
+         this.token=value
+      }
+
+
    },
    getters:{
       getStudentNumber():string{
@@ -15,12 +20,18 @@ export  const useUserStore = defineStore('user', {
       },
       getPassword():string{
          return this.password
-      }
+      },
+      getToken():string{
+         return this.token
+      },
+
    }, 
    state(){
       return {
           studentNumber:'--',
-          password:'--'
+          password:'--',
+          token:'--'
+
       } 
    },
 })
