@@ -13,7 +13,8 @@
         <el-aside>
           <el-row class="tac">
             <el-col :span="24"> 
-              <h3 class="edit">编辑组织目录</h3>
+              <h3 class="edit" @click="handleEditClick">组织目录</h3>
+
               <el-menu
                 default-active="2"
                 class="el-menu-vertical-demo"
@@ -45,15 +46,22 @@
             </el-col>
           </el-row>
         </el-aside>
-        <el-main></el-main>
+        <el-main>
+         <RouterView/>
+        </el-main>
       </el-container>
     </el-container>
   </div>
 </template>
 
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import { RouterLink,useRouter } from 'vue-router'
 
+const router = useRouter()
+
+const handleEditClick=()=>{
+  router.push({name:'stationIndex'})
+}
 
 const handleOpen = (key: string, keyPath: string[]) => {
   console.log(key, keyPath)

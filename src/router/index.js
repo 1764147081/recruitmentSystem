@@ -19,7 +19,13 @@ const routes = [
     //     path: '/user',
     //     name: 'user',
     //     component: () => import('@/pages/User.vue'),
-    //   }
+    //   },
+     
+      {
+        path: '/stationIndex',
+        name: 'stationIndex',
+        component: () => import('@/pages/StationIndex.vue')
+      }
     ]
 
   }
