@@ -3,11 +3,13 @@
     <el-container>
       <el-header class="header-container">
         <img src='@/assets/logo.png' alt="logo" id="logo"></img>
-        <div class="name">yourName</div>
-        <Avatar/>
-        <RouterLink :to="{name:'login'}">
+        
+        <RouterLink :to="{name:'login'}" v-if="!user.getIsLogin">
           <el-button>登录</el-button>
         </RouterLink>
+        <div class="name" v-if="user.getIsLogin">名字</div>
+        
+
       </el-header>
       <el-container>
         <el-aside>
@@ -27,8 +29,8 @@
                     <span>我的管理</span>
                   </template>
                   <el-menu-item-group>
-                    <el-menu-item index="1-1">选项1</el-menu-item>
-                    <el-menu-item index="1-2">选项2</el-menu-item>
+                    <el-menu-item index="11">选项1</el-menu-item>
+                    <el-menu-item index="12">选项2</el-menu-item>
                   </el-menu-item-group>
                 </el-sub-menu>
                 
@@ -38,8 +40,8 @@
                     <span>我的收藏</span>
                   </template>
                   <el-menu-item-group>
-                    <el-menu-item index="2-1">选项1</el-menu-item>
-                    <el-menu-item index="2-2">选项2</el-menu-item>
+                    <el-menu-item index="21">选项1</el-menu-item>
+                    <el-menu-item index="22">选项2</el-menu-item>
                   </el-menu-item-group>
                 </el-sub-menu>
               </el-menu>
@@ -56,8 +58,14 @@
 
 <script setup lang="ts">
 import { RouterLink,useRouter } from 'vue-router'
+import { useUserStore } from '../store/user'
+import { useStationStore } from '../store/station'
+import { Avatar } from '@element-plus/icons-vue'
+
+
 
 const router = useRouter()
+const user = useUserStore()
 
 const handleEditClick=()=>{
   router.push({name:'stationIndex'})

@@ -10,6 +10,9 @@ export  const useUserStore = defineStore('user', {
       },
       changeToken(value:string){
          this.token=value
+      },
+      changeIsLogin(){
+         this.isLogin=true
       }
 
 
@@ -24,13 +27,18 @@ export  const useUserStore = defineStore('user', {
       getToken():string{
          return this.token
       },
+      getIsLogin():boolean{
+          return this.isLogin
+      }
+
 
    }, 
    state(){
       return {
           studentNumber:'--',
           password:'--',
-          token:'--'
+          token:'--',
+          isLogin:false
 
       } 
    },

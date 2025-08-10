@@ -126,6 +126,7 @@ const response = await fetch(`${baseURL}/user/login/cas?${queryParams}`, {
     if (secondMessage.code === 200) {
       router.push('/');
       user.changeToken(secondMessage.data);
+      user.changeIsLogin()
       console.log(user.getToken);
     }
   }
