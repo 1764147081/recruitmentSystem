@@ -1,8 +1,8 @@
-import axios from "axios";
+import service from './request'
 import qs from "qs";
 
 function getUserRouters(uid){
-    return axios({
+    return service({
         url: '/api/user/getUserRouters',// 获取用户权限路由,接口未定
         method: 'post',
         headers: {

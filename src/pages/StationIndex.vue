@@ -183,7 +183,7 @@ async function search() {
     let response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': user.getToken
+        'Authorization': `Bearer {user.getToken}`
       }
     })
     let data = await response.json()

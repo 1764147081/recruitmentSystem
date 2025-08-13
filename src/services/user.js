@@ -1,0 +1,84 @@
+import service from './request'
+import axios from "axios";
+
+// 获取用户信息
+export function getUserInfo() {
+  return service({
+    url: '/user/info',
+    method: 'get',
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
+// 更新用户信息
+export function updateUserInfo(data) {
+  return service({
+    url: '/user/update/info',
+    method: 'put',
+    data
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
+// 上传头像
+export function uploadAvatar(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  return service({
+    url: '/user/upload/avatar',
+    method: 'post',
+    data: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
+
+// 更新密码
+export function updatePassword(data) {
+  return service({
+    url: '/user/update/password',
+    method: 'post',
+    data
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
+// 获取问卷状态
+export function getQuestionnaireStatus() {
+  return service({
+    url: '/questionnaire/view/status',
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
+// 展开站点
+export function unfoldStation(stationId) {
+  return service({
+    url: `/station/unfold?id=${stationId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
