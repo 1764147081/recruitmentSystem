@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
-interface Station{
+export interface Station{
     name:string,
     id:number,
     parentId:number,
     description:string,
+    img:string,
+    stationId:number,
     children:Station[]
 }
 

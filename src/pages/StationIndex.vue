@@ -1,10 +1,9 @@
 <template>
   <div>
     <h1>编辑组织目录</h1>
-    <button>创建模块</button>
 
-    <el-row class="tac">
-            <el-col :span="24"> 
+
+ 
               <h3 class="edit" @click="">组织目录</h3>
 
               <el-button type="warning" @click="show = true">添加部门</el-button>
@@ -55,9 +54,9 @@
                   <el-form-item label="设置模块名称" prop="name">
                     <el-input v-model="stationList.name" autocomplete="off" />
                   </el-form-item>
-                  <el-form-item prop="description">
+                  <el-form-item label="输入模块描述"prop="description">
                     <el-input type="textarea" v-model="stationList.description" autocomplete="off" />
-                    <div>输入模块描述</div>
+                    
                   </el-form-item>
                   <el-form-item label="设置模块负责人" prop="manager">
                     <el-input v-model="stationList.manager"  placeholder="请输入姓名" autocomplete="off" />
@@ -65,33 +64,16 @@
                   </el-form-item>
 
                   <el-form-item>
-                    <el-button type="primary" @click="addStation">确定</el-button>
+                    <el-button  @click="addStation">确定</el-button>
                     <el-button @click="setStation=false">取消</el-button>
                   </el-form-item>
                 </el-form>
               </div>
-
-
-
-              <el-menu
-                default-active="2"
-                class="el-menu-vertical-demo"
-                @open=""
-                @close="">
-                
-                <!-- 我的管理 -->
-                <el-sub-menu >
-                  <template #title>
-                    <span>我的管理</span>
-                  </template>
-                  <el-menu-item-group>
-                    
-                  </el-menu-item-group>
-                </el-sub-menu>
-              </el-menu>
-            </el-col>
-          </el-row>
+            
+              
+   
   </div>
+  <recursive-menu :menu-data="menuData" />
 </template>
 
 <script setup lang="ts">
@@ -99,14 +81,29 @@ import { ref,reactive } from 'vue'
 import { onBeforeMount } from 'vue'
 import { useUserStore } from '../store/user'
 import { useStationStore } from '../store/station'
+import { Station } from '../store/station'
 import { ElMessageBox, ElMessage, ElForm, ElFormItem, ElInput, ElButton } from 'element-plus'
+import RecursiveMenu from '../components/RecursiveMenu.vue'
+import { getStationView } from '../store/stationTree'
+import { onMounted } from 'vue'
 
-const BaseUrl='https://i.sdu.edu.cn/XSZX/NXXT/api'
+const BaseUrl='https://www.isdu-remote-connect.asia/XSZX/NXXT/api'
 const user = useUserStore()
 const station = useStationStore()
+const menuData = ref<Station[]>([]); 
 
 
-const topId=0
+
+onMounted(async () => {
+  const station = await getStationView(1); 
+  menuData.value = [station]; 
+});
+
+console.log(menuData.value)
+
+
+const topId=1001
+
 
 const show=ref(false)
 const setStation=ref(false)
@@ -128,6 +125,10 @@ const stationList = reactive({
   description: '',
   manager: '',
 })
+
+const stationStore:Station[] = []
+const stationMap = ref(stationStore)
+
 
 
 const handleUploadSuccess = (response, file, fileList) => {
@@ -183,7 +184,9 @@ async function search() {
     let response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': user.getToken
+         'content-type': 'application/x-www-form-urlencoded',
+        'Authorization':`Bearer ${user.getToken}`
+
       }
     })
     let data = await response.json()
@@ -200,37 +203,49 @@ async function search() {
 
 }
 
-async function addStation(){
+async function addStation() {
 
-  station.changeName(stationList.name)
-  station.changeParentId(topId)
-  station.changeDescription(stationList.description)
+  station.changeName(stationList.name);
+  station.changeDescription(stationList.description);
+  station.changeId(topId)
+
+  console.log(station.getName)
+  console.log(station.getDescription)
+  console.log(user.getToken) 
 
 
-  let url = `${BaseUrl}/station/create`
-  let response = await fetch(url, {
+
+
+
+  let url = `${BaseUrl}/station/create`;
+  let url2 = "https://m1.apifoxmock.com/m1/6884356-6599915-default/station/edit"
+  
+try {
+  const response = await fetch(url2, {
     method: 'POST',
     headers: {
-      'Authorization': user.getToken
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${user.getToken}`
     },
-    body: JSON.stringify(
-      {
-        name: stationList.name,
-        parentId: stationList.parentId,
-        description: stationList.description
-      }
+    body: JSON.stringify({
+      name: station.getName,
+      description: station.getDescription,
+      isDepartment:0
+    })
+  });
 
-    )
-  })
-  let data = await response.json()
-  if(data.code == 200) {
-    ElMessage.success('添加成功')
-  }else{
-    ElMessage.error('添加失败')
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Server responded with ${response.status}: ${errorText}`);
   }
 
-
-
+  const data = await response.json();
+  console.log('Success:', data);
+  return data;
+} catch (error) {
+  console.error('Request failed:', error);
+  throw error;
+}
 }
 
 
