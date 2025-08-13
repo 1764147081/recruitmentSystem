@@ -1,21 +1,18 @@
 <template>
-        
-          <el-avatar :size="80" :src="circleUrl" />
-        
+  <el-avatar :size="80" :src="userAvatar" />
 </template>
 
 <script lang="ts" setup>
-import { reactive, toRefs } from 'vue'
+import { computed } from 'vue'
+import { useUserStore } from '@/store/user.ts'
 
-const state = reactive({
-  circleUrl:
-    'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png',
-  squareUrl:
-    'https://cube.elemecdn.com/9/c2/f0ee8a3c7c9638a54940382568c9dpng.png',
-  sizeList: ['small', '', 'large'] as const,
+const userStore = useUserStore()
+
+// 优先使用用户头像，如果没有则使用默认头像
+const userAvatar = computed(() => {
+  return userStore.userInfo.avatar || 
+    'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 })
-
-const { circleUrl} = toRefs(state)
 </script>
 
 <style scoped>

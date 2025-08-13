@@ -184,9 +184,7 @@ async function search() {
     let response = await fetch(url, {
       method: 'GET',
       headers: {
-         'content-type': 'application/x-www-form-urlencoded',
-        'Authorization':`Bearer ${user.getToken}`
-
+        'Authorization': user.getToken
       }
     })
     let data = await response.json()

@@ -25,6 +25,11 @@ const routes = [
         path: '/stationIndex',
         name: 'stationIndex',
         component: () => import('@/pages/StationIndex.vue')
+      },
+      {
+        path: '/profile',
+        name: 'profile',
+        component: () => import('@/pages/Profile.vue')
       }
     ]
 
