@@ -82,3 +82,15 @@ export function unfoldStation(stationId) {
     throw err;
   });
 }
+
+// 获取部门详细信息
+export function getDepartmentInfo(departmentId) {
+  return service({
+    url: `/department/view?id=${departmentId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
