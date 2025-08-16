@@ -105,7 +105,6 @@ const menuData = ref<Station[]>([]);
 onMounted(async () => {
   const sentProp = await getStationView(1); 
   menuData.value = [sentProp]; 
-  console.log(menuData.value)
 
 });
 
