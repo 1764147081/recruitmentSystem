@@ -6,6 +6,7 @@ export interface Station{
     description:string,
     img:string,
     stationId:number,
+    isDepartment:number,
     children:Station[]
 }
 
@@ -29,6 +30,11 @@ export const useStationStore = defineStore('station',{
         addChild(child:Station){
             this.children.push(child)
         }
+        ,
+        changeImg(value:string){
+            this.img=value
+        }
+
 
     },
     getters:{
@@ -48,6 +54,11 @@ export const useStationStore = defineStore('station',{
         getChildren(){
             return this.children
         }
+        ,
+        getImg():string{
+            return this.img
+        }
+
 
     },
 
@@ -57,7 +68,11 @@ export const useStationStore = defineStore('station',{
             id:0,
             parentId:0,
             description:'',
+            img:'',
+            stationId:0,
+            isDepartment:0,
             children:[]
+
 
         }
     }

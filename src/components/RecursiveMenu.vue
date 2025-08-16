@@ -5,12 +5,13 @@
     :background-color="backgroundColor"
     :text-color="textColor"
     :active-text-color="activeTextColor"
-    :collapse="isCollapse"
+    :collapse="isCollapse"  
   >
-    <menu-item 
-      v-for="item in menuData" 
-      :key="item.id" 
-      :item="item" 
+    <menu-item
+      v-for="item in menuData"
+      :key="item.id"
+      :item="item"
+      @item-click="handleItemClick"  
     />
   </el-menu>
 </template>
@@ -18,30 +19,27 @@
 <script setup>
 import { ref } from 'vue';
 import MenuItem from './MenuItem.vue';
+import { useStationStore } from '../store/station';
 
+const stationStore = useStationStore();
 const props = defineProps({
-  menuData: {
-    type: Array,
-    required: true,
-    default: () => []
-  },
-  backgroundColor: {
-    type: String,
-    default: '#304156'
-  },
-  textColor: {
-    type: String,
-    default: '#bfcbd9'
-  },
-  activeTextColor: {
-    type: String,
-    default: '#409EFF'
-  },
-  isCollapse: {
-    type: Boolean,
-    default: false
-  }
+  menuData: Array,
+  backgroundColor: String,
+  textColor: String,
+  activeTextColor: String,
+  isCollapse: Boolean,
 });
 
 const activeMenu = ref('');
+
+// 直接监听子组件的 item-click 事件
+const handleItemClick = (itemId) => {
+  console.log('当前选中项 ID:', itemId);
+  activeMenu.value = itemId;  
+  stationStore.changeParentId(itemId)
+  console.log(stationStore.getParentId)
+
+};
+
+
 </script>

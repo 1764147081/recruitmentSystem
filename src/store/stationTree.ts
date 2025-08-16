@@ -1,4 +1,4 @@
-import { stat } from "fs";
+
 import {Station} from "./station.ts"
 import {useUserStore} from "./user.ts";
 
@@ -17,6 +17,7 @@ export async function getStationView(id: number): Promise<Station> {
     description: '',
     img: '',
     stationId: 0,
+    isDepartment: 0,
     children: []
   };
 
@@ -47,9 +48,7 @@ export async function getStationView(id: number): Promise<Station> {
   const childrenData = await res.json();
 
 
-   console.log(data2)
-
-   console.log(childrenData)
+   
 
   // 填充基础信息
   station.name = data2.data.name;
@@ -63,13 +62,29 @@ export async function getStationView(id: number): Promise<Station> {
   if (childrenData.data && childrenData.data.length > 0) {
     // 递归获取每个子节点的完整信息
     for (const childData of childrenData.data) {
-      const childStation = await getStationView(childData.id);
-      station.children.push(childStation);
+      if(childData.isDepartment==0){
+        const childStation = await getStationView(childData.id);
+        station.children.push(childStation);
+        console.log("是站点获取子站点")
+      }else{
+        const res3 = await fetch(baseUrl + "/department/view?id=" + childData.id,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization':`Bearer ${user.getToken}`
+            }
+          }
+        );
+        const data3 = await res3.json();
+        station.children.push(data3.data);
+        console.log("是部门获取部门信息")
+      }
     }
   }else{
     station.children=[]
   }
-  console.log(station)
+
 
   return station;
 }

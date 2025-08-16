@@ -1,53 +1,51 @@
 <template>
   <el-sub-menu 
     v-if="hasChildren" 
-    :index="item.id"
-    @click="handleClick(item)"
+    :index="String(item.id)"
+    @open="handleSubMenuOpen"  
   >
     <template #title>
-      <span>{{ item.name }}</span>
+      <span @click.stop="handleTitleClick">{{ item.name }}</span>
     </template>
     <menu-item
       v-for="child in item.children"
       :key="child.id"
       :item="child"
+      @item-click="(id) => $emit('item-click', id)"
     />
   </el-sub-menu>
   
-  <el-menu-item v-else :index="item.id" @click="handleClick(item)">
-    <template #title>{{ item.name }}</template>
+  <el-menu-item v-else :index="String(item.id)" @click="handleItemClick">
+    <span>{{ item.name }}</span>
   </el-menu-item>
 </template>
 
 <script setup>
-import { defineProps, ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { defineProps, computed } from 'vue';
 
 const props = defineProps({
   item: {
     type: Object,
-    required: true
-  }
+    required: true,
+  },
 });
 
-const router = useRouter();
-const hasChildren = ref(false);
-const loading = ref(false);
+const emit = defineEmits(['item-click']);
 
-// 检查是否有子菜单
-const checkChildren = async () => {
-  if (props.item.children) {
-    hasChildren.value = props.item.children.length > 0;
-    return;
-  }
-  
+const hasChildren = computed(() => {
+  return props.item.children && props.item.children.length > 0;
+});
+
+const handleSubMenuOpen = (index) => {
+  console.log('子菜单展开:', index);
 };
 
-onMounted(() => {
-  checkChildren();
-});
+const handleTitleClick = (e) => {
+  e.stopPropagation();
+  emit('item-click', props.item.id);
+};
 
-const handleClick = (item) => {
-
+const handleItemClick = () => {
+  emit('item-click', props.item.id);
 };
 </script>

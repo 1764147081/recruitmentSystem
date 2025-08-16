@@ -28,7 +28,7 @@
                   </template>
                   <template v-for="station in stationTree" :key="station.id">
                     <el-menu-item v-if="station.isDepartment === 1" :index="station.id.toString()"
-                      class="department-node" @click="goToDepartment(station.id)">
+                      class="department-node">
                       {{ station.name }}
                     </el-menu-item>
                     <el-sub-menu v-else :index="station.id.toString()">
@@ -36,7 +36,7 @@
                       <!-- 递归渲染子站点 -->
                       <template v-for="child in station.children" :key="child.id">
                         <el-menu-item v-if="child.isDepartment === 1" :index="child.id.toString()"
-                          class="department-node" @click="goToDepartment(child.id)">
+                          class="department-node">
                           {{ child.name }}
                         </el-menu-item>
                         <el-sub-menu v-else :index="child.id.toString()">
@@ -44,7 +44,7 @@
                           <!-- 继续递归渲染子站点 -->
                           <template v-for="grandchild in child.children" :key="grandchild.id">
                             <el-menu-item v-if="grandchild.isDepartment === 1" :index="grandchild.id.toString()"
-                              class="department-node" @click="goToDepartment(grandchild.id)">
+                              class="department-node">
                               {{ grandchild.name }}
                             </el-menu-item>
                             <el-sub-menu v-else :index="grandchild.id.toString()">
@@ -128,18 +128,13 @@ const fetchStationTree = async (stationId: number) => {
           // 如果不是部门，则继续获取子站点
           if (item.isDepartment !== 1) {
             console.log('站点', item.id, '不是部门，继续获取子站点')
-
-            try {
-              const childRes = await unfoldStation(item.id)
-              console.log('获取子站点响应:', childRes)
-              if (childRes && childRes.data) {
-                item.children = childRes.data
+            const childRes = await unfoldStation(item.id)
+            console.log('获取子站点响应:', childRes)
+            if (childRes && childRes.data) {
+              item.children = childRes.data
+              if (item.children) {
                 await processChildren(item.children)
               }
-            } catch (error) {
-              // 处理404错误，不影响其他节点的渲染
-              console.warn('获取子站点失败，可能无子菜单:', item.id, error)
-              // 即使出错也继续处理其他节点
             }
           } else {
             console.log('站点', item.id, '是部门，跳过获取子站点')
@@ -169,6 +164,7 @@ const initializeStationData = async () => {
     console.log('开始初始化站点数据')
      async function getPermission() {
       const username = parseInt(userInfo.value.username)
+      console.log(`'!!!!!!!!!!!!!!!!!!',${username}`)
       const res = await fetch(`${baseURL}/permission/show/user?username=${username}`, {
         headers: {
           'Content-Type': 'application/json',
@@ -178,7 +174,7 @@ const initializeStationData = async () => {
       }).then(res => res.json())
       return res.data[0].stationId;
     }
-    const rootStationId = await getPermission();``
+    const rootStationId = await getPermission();
 
     console.log('使用根站点ID获取站点树:', rootStationId)
     await fetchStationTree(rootStationId)
@@ -237,11 +233,6 @@ onBeforeMount(async () => {
 // 跳转到个人信息页面
 const goToProfile = () => {
   router.push({ name: 'profile' })
-}
-
-// 跳转到部门详细页
-const goToDepartment = (departmentId) => {
-  router.push({ name: 'departmentDetail', params: { id: departmentId } })
 }
 
 const handleEditClick = () => {
@@ -387,9 +378,8 @@ const handleEditClick = () => {
 }
 
 .el-menu-vertical-demo .department-node.is-active {
-  background-color: #1890ff;
-  color: white;
-  border-left: 3px solid #0056b3;
-  font-weight: bold;
+  background-color: #e6f7ff;
+  color: #1890ff;
+  border-left: 3px solid #1890ff;
 }
 </style>

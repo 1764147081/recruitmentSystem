@@ -97,6 +97,15 @@ watch(
 );
 </script>
 
+
+
+
+
+
+
+
+
+
 <style scoped>
 .department-detail {
   padding: 20px;
