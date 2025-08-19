@@ -38,7 +38,7 @@
         <p>这里是报名管理内容</p>
       </el-tab-pane>
       <el-tab-pane label="题库管理" name="questionBank">
-        <p>这里是题库管理内容</p>
+        <Question :departmentId="departmentInfo.departmentId" />
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -47,8 +47,11 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { getDepartmentInfo } from '../services/user.js';
+import { getDepartmentInfo,getDepartmentIdByStationId } from '../services/user.js';
+
 import { ElTabs, ElTabPane } from 'element-plus';
+import Question from '../components/Question.vue';
+
 
 // 获取路由参数
 const route = useRoute();
@@ -59,6 +62,7 @@ const activeTab = ref('overview');
 // 部门信息
 const departmentInfo = ref({
   id: '',
+  departmentId:0,
   name: '',
   description: '',
   totalRegistrations: 0,
@@ -69,7 +73,8 @@ const departmentInfo = ref({
   ]
 });
 
-// 获取部门详细信息
+// 获取部门详细信息(departmentId其实是stationId)
+
 const fetchDepartmentInfo = async (departmentId) => {
   try {
     const res = await getDepartmentInfo(departmentId);
@@ -83,9 +88,25 @@ const fetchDepartmentInfo = async (departmentId) => {
   }
 };
 
+const getDepartmentId=async(departmentId)=>{
+  try {
+    const res=await getDepartmentIdByStationId(departmentId);
+    if(res&&res.data){
+      departmentInfo.value.departmentId=res.data.id;
+    }
+    console.log('获取部门id成功:', departmentInfo.value.departmentId);
+  } catch (error) {
+    throw error;
+  }
+}
+
+
+
 // 组件挂载时获取部门信息
 onMounted(() => {
   fetchDepartmentInfo(route.params.id);
+  getDepartmentId(route.params.id);
+
 });
 
 // 监听路由参数变化
@@ -93,6 +114,8 @@ watch(
   () => route.params.id,
   (newId) => {
     fetchDepartmentInfo(newId);
+    getDepartmentId(newId);
+
   }
 );
 </script>

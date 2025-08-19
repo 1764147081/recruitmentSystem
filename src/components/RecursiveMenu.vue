@@ -33,12 +33,23 @@ const props = defineProps({
 const activeMenu = ref('');
 
 // 直接监听子组件的 item-click 事件
-const handleItemClick = (itemId) => {
+const handleItemClick = (itemId,isDepartment,parentId) => {
+
+
+
   console.log('当前选中项 ID:', itemId);
   activeMenu.value = itemId;  
-  stationStore.changeParentId(itemId)
+  stationStore.changeId(itemId)
+  stationStore.changeIsDepartment(isDepartment)
+  stationStore.changeParentId(parentId)
+
+  console.log(stationStore.getIsDepartment)
+  console.log(stationStore.getId)
   console.log(stationStore.getParentId)
 
+
+
+  
 };
 
 

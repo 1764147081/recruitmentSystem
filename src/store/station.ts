@@ -34,6 +34,10 @@ export const useStationStore = defineStore('station',{
         changeImg(value:string){
             this.img=value
         }
+        ,
+        changeIsDepartment(value:number){   
+            this.isDepartment=value
+        }
 
 
     },
@@ -57,6 +61,10 @@ export const useStationStore = defineStore('station',{
         ,
         getImg():string{
             return this.img
+        }
+        ,
+        getIsDepartment():number{
+            return this.isDepartment
         }
 
 

@@ -12,7 +12,8 @@ service.interceptors.request.use(
   config => {
     // 获取用户store实例
     const userStore = useUserStore()
-    config.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    config.headers['Content-Type'] = 'application/json';
+
     // 如果store中有token，则添加到请求头中
     if (userStore.getToken && userStore.getToken !== '--') {
       config.headers['Authorization'] = `Bearer ${userStore.getToken}`

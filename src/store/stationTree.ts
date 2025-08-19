@@ -56,21 +56,35 @@ export async function getStationView(id: number): Promise<Station> {
   // 填充基础信息
   station.name = data2.data.name;
   station.id = data2.data.id;
-  station.parentId = data2.data.parentId;
+  station.parentId = data2.data.pId;
   station.description = data2.data.description;
   station.img = data2.data.img;
   station.stationId = data2.data.stationId;
+  station.isDepartment = data2.data.isDepartment;
 
-  // 处理子节点
-  if (childrenData.data && childrenData.data.length > 0) {
+  try {
+    // 处理子节点
+  if(station.isDepartment!==1){
+    if (childrenData.data && childrenData.data.length > 0) {
     // 递归获取每个子节点的完整信息
     for (const childData of childrenData.data) {
-      const childStation = await getStationView(childData.id);
+      
+        const childStation = await getStationView(childData.id);
       station.children.push(childStation);
     }
+    
   }else{
     station.children=[]
   }
+  }else{
+    station.children=[]
+  }
+  }
+  catch (error) {
+    console.error('获取子节点信息失败:', error);
+  }
+
+
   console.log(station)
 
   return station;

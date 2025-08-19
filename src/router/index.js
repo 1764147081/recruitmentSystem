@@ -34,7 +34,15 @@ const routes = [
       {
         path: '/department/:id',
         name: 'departmentDetail',
-        component: () => import('@/pages/DepartmentDetail.vue')
+        component: () => import('@/pages/DepartmentDetail.vue'),
+        children: [
+          {
+            path: '/question',
+            name: 'question',
+            component: () => import('@/components/Question.vue')
+          }
+        ]
+          
       }
     ]
 

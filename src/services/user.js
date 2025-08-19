@@ -1,3 +1,4 @@
+import { da } from 'element-plus/es/locales.mjs';
 import service from './request'
 import axios from "axios";
 
@@ -86,7 +87,7 @@ export function unfoldStation(stationId) {
 // 获取部门详细信息
 export function getDepartmentInfo(departmentId) {
   return service({
-    url: `/department/view?id=${departmentId}`,
+    url: `/department/view?stationId=${departmentId}`,
     method: 'get'
   }).then(res => {
     return res.data;
@@ -94,3 +95,72 @@ export function getDepartmentInfo(departmentId) {
     throw err;
   });
 }
+
+export function createQuestionnaire(departmentId,data) {
+  return service({
+    url: `/questionnaire/edit?departmentId=${departmentId}`,
+    method: 'post',
+    data
+
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+
+  });
+}
+export function getQuestionnaire(departmentId) {
+  return service({
+    url: `/department/view/questionnaire?departmentId=${departmentId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
+export function getQuestionnaireDetailedById(departmentId){
+  return service({
+    url: `/department/view/questions?departmentId=${departmentId}`,
+    method: 'get'
+  }).then(
+    res=>{
+      return res.data;
+    }
+
+  ).catch(
+    err=>{
+      throw err;
+    }
+  )
+}
+
+
+export function addQuestion(question) {
+  return service({
+    url: `/questionnaire/edit/questions`,
+    method: 'post',
+    data:question
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
+export function getDepartmentIdByStationId(stationId){
+  return service({
+    url: `/department/view?stationId=${stationId}`,
+    method: 'get'
+  }).then(res=>{
+    return res.data;
+  }).catch(err=>{
+    throw err;
+
+  })
+}
+
+
+
+

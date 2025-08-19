@@ -2,10 +2,19 @@
   <div>
     <h1>编辑组织目录</h1>
       <h3 class="edit" @click="">组织目录</h3>
-      <el-button type="warning" @click="setDepartment = true;setStation=false">添加部门</el-button>
+      <el-button type="warning" @click="setDepartment = true;setStation=false"  >添加部门</el-button>
       <el-button type="warning" @click="setStation = true;setDepartment=false">设置模块</el-button>
+      <el-button type="danger" @click="deleteDepartment">删除</el-button>
   </div>
-  <recursive-menu :menu-data="menuData" />
+  <recursive-menu :menu-data="menuData":key="menuKey" />
+  <div>
+    <h1>设置管理员</h1>
+    <el-input placeholder="请输入管理员姓名" v-model="username"/>
+    <el-button type="primary" @click="search">查询</el-button>
+    <el-button type="primary" @click="setPermission">添加</el-button>
+  </div>
+  
+
   <div class="content">
               <div v-if="setDepartment">
                 <el-form :model="formData"  label-width="120px" class="demo-ruleForm">
@@ -43,10 +52,6 @@
               </el-upload>
               <div class="upload-tip">请选择图片文件（支持 JPG/PNG）</div>
                   </el-form-item>
-                  <el-form-item label="设置部门负责人" prop="manager">
-                    <el-input v-model="formData.manager"  placeholder="请输入姓名" autocomplete="off" />
-                    <el-button type="primary" @click="search">搜索</el-button>
-                  </el-form-item>
                   <el-form-item>
                     <el-button  @click="addDepartment">确定</el-button>
                     <el-button @click="setDepartment=false">取消</el-button>
@@ -65,12 +70,12 @@
                   </el-form-item>
                   <el-form-item label="输入模块描述"prop="description">
                     <el-input type="textarea" v-model="stationList.description" autocomplete="off" />
-                    
                   </el-form-item>
-                  <el-form-item label="设置模块负责人" prop="manager">
-                    <el-input v-model="stationList.manager"  placeholder="请输入姓名" autocomplete="off" />
-                    <el-button type="primary" @click="search">搜索</el-button>
+                  <el-form-item label="是否为部门">
+                     <el-radio v-model="stationList.isDepartment" label="0">否</el-radio>
+                     <el-radio v-model="stationList.isDepartment" label="1">是</el-radio>
                   </el-form-item>
+
 
                   <el-form-item>
                     <el-button  @click="addStation">确定</el-button>
@@ -95,18 +100,33 @@ import { ElMessage,  ElForm, ElFormItem, ElInput, ElButton } from 'element-plus'
 import RecursiveMenu from '../components/RecursiveMenu.vue'
 import { getStationView } from '../store/stationTree'
 import { onMounted } from 'vue'
+import { stat } from 'fs'
 
 const BaseUrl='https://i.sdu.edu.cn/XSZX/NXXT/api'
 const user = useUserStore()
 const station = useStationStore()
 const menuData = ref<Station[]>([]); 
+let type=""
+
+const fetchMenuData = async () => {
+  try {
+    const sentProp = await getStationView(1); 
+    menuData.value = [sentProp]; 
+  } catch (error) {
+    console.error('获取菜单数据失败:', error);
+    ElMessage.error('获取菜单数据失败');
+  }
+};
 
 
-onMounted(async () => {
-  const sentProp = await getStationView(1); 
-  menuData.value = [sentProp]; 
+onBeforeMount(fetchMenuData)
 
-});
+const menuKey = ref(0);
+
+const refreshMenu = () => {
+  menuKey.value += 1;
+  fetchMenuData();
+};
 
 
 
@@ -116,6 +136,7 @@ onMounted(async () => {
 
 const setDepartment=ref(false)
 const setStation=ref(false)
+const username=ref("")
 
 const formData = reactive({
   name: '',
@@ -132,6 +153,7 @@ const stationList = reactive({
   parentId: 0,
   description: '',
   manager: '',
+  isDepartment: 0,
 })
 
 const stationStore:Station[] = []
@@ -175,8 +197,9 @@ onBeforeUnmount(() => {
 
 async function search() {
   console.log(user.getToken)
-  console.log(stationList.manager)
-  let url = `${BaseUrl}/user/info?username=${stationList.manager}`
+  console.log(username.value)
+  let url = `${BaseUrl}/user/info?username=${username.value}`
+
   try {
     let response = await fetch(url, {
       method: 'GET',
@@ -186,14 +209,33 @@ async function search() {
     })
     let data = await response.json()
     if(data.code == 200) {
-      stationList.manager = data.data.username
-      console.log(data.data.username)
+      username.value = data.data.username
+     alert(data.data.username)
     }
   } catch (error) {
     console.log(error)
   }
-  
+}
 
+async function setPermission() {
+  const queryParams = new URLSearchParams({
+  username:username.value,
+  stationId:station.getParentId.toString()
+})
+  const url = `${BaseUrl}/permission/set?${queryParams}`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${user.getToken}`
+    }
+  })
+  let data = await response.json()
+  if(data.code == 200) {
+    alert("设置成功")
+  }else{
+    alert("设置失败")
+  }
 
 
 }
@@ -202,76 +244,115 @@ async function addStation() {
   station.changeName(stationList.name);
   station.changeDescription(stationList.description);
   let url = `${BaseUrl}/station/create`  
-try {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${user.getToken}`
-    },
-    body: JSON.stringify({
-      name: station.getName,
-      description: station.getDescription,
-      pId: station.getParentId,
-      isDepartment:0
-    })
-  });
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.getToken}`
+      },
+      body: JSON.stringify({
+        name: station.getName,
+        description: station.getDescription,
+        pId: station.getId,
+        isDepartment:stationList.isDepartment
+      })
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Server responded with ${response.status}: ${errorText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Server responded with ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('Success:', data);
+    
+    // 添加成功后刷新菜单
+    await refreshMenu();
+    ElMessage.success('模块创建成功');
+    
+    return data;
+  } catch (error) {
+    console.error('Request failed:', error);
+    ElMessage.error('模块创建失败');
+    throw error;
   }
-
-  const data = await response.json();
-  console.log('Success:', data);
-  return data;
-} catch (error) {
-  console.error('Request failed:', error);
-  throw error;
-}
 }
 
+async function addDepartment() {
+  station.changeName(formData.name)
+  station.changeDescription(formData.description)
+  console.log(station.getParentId)
+  console.log(station.getId)
 
-async function addDepartment(){
 
 
- station.changeName(formData.name)
- station.changeDescription(formData.description)
- let url = `${BaseUrl}/department/create`  
- try {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${user.getToken}`
-    },
-    body: JSON.stringify({
-      name: station.getName,
-      pId: station.getParentId,
-      description: station.getDescription,
-      image:station.getImg
-    })
-  });
+  let url = `${BaseUrl}/department/create`  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.getToken}`
+      },
+      body: JSON.stringify({
+        pId:station.getId,
+        name: station.getName,
+        description: station.getDescription,
+        image:station.getImg,
+      })
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Server responded with ${response.status}: ${errorText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Server responded with ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    console.log('Success:', data);
+    
+    // 添加成功后刷新菜单
+     refreshMenu();
+    ElMessage.success('部门创建成功');
+    
+    return data;
+  } catch (error) {
+    console.error('Request failed:', error);
+    ElMessage.error('部门创建失败');
+    throw error;
   }
-
-  const data = await response.json();
-  console.log('Success:', data);
-  return data;
-} catch (error) {
-  console.error('Request failed:', error);
-  throw error;
 }
 
+async function deleteDepartment(){
+  try{
+    const res = await fetch(`${BaseUrl}/station/del?stationId=${station.getId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${user.getToken}`
+      }
+    })
+    if(res.status == 200) {
+      ElMessage.success('部门删除成功');
+    }
+    refreshMenu();
+  }catch(error){
+    console.error('Request failed:', error);
+    ElMessage.error('部门删除失败');
+    throw error;
+  }
+  
+
+
+
 }
-
-
 
 
 </script>
+
+
+
+
+
 
 <style scoped>
   h3{

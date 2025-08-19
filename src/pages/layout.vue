@@ -134,7 +134,9 @@ const fetchStationTree = async (stationId: number) => {
               console.log('获取子站点响应:', childRes)
               if (childRes && childRes.data) {
                 item.children = childRes.data
-                await processChildren(item.children)
+                if (item.children) {
+                  await processChildren(item.children)
+                }
               }
             } catch (error) {
               // 处理404错误，不影响其他节点的渲染
