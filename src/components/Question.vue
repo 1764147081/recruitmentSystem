@@ -170,9 +170,9 @@ const type=ref(0)
 const formdata = reactive({
     departmentId:props.departmentId,
     questionnaireId:questionnaireId.value,
-    type:type.value,
+    type:1,
     content:'',
-    sort:sort.value+2,
+    sort:sort.value+1,
     options:[
       {
         optionContent:'',
@@ -236,8 +236,16 @@ async function getQuestion(){
     const result = await getQuestionnaireDetailedById(props.departmentId);
     if(result.code===200){
       console.log(result.data);
-      questionList.value=result.data.questions;
-      sort.value=result.data.questions.length;
+      questionList.value=result.data.questions
+      if(result.data.questions===null){
+        sort.value=0
+      }else{
+        sort.value=result.data.questions.length;
+        console.log(result.data.questions.length)
+      }
+
+
+
     }
   } catch (error) {
     console.error("发生错误:", error);
@@ -291,7 +299,7 @@ async function handlePublish() {
 
 async function handleDelete(){
   try {
-    const result = await deleteQuestionnaire(questionnaireId.value);
+    const result = await deleteQuestionnaire(props.departmentId);
     if(result.code===200){
       ElMessage.success('删除成功');
     }else{

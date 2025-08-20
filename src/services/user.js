@@ -172,9 +172,9 @@ export function publishQuestionnaire(questionnaireId) {
   });
 }
 
-export function deleteQuestionnaire(questionnaireId) {
+export function deleteQuestionnaire(departmentId) {
   return service({
-    url: `/questionnaire/delete?questionnaireId=${questionnaireId}`,
+    url: `/questionnaire/delete?questionnaireId=${departmentId}`,
     method: 'post'
   }).then(res => {
     return res.data;

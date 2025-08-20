@@ -50,7 +50,8 @@ import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { getDepartmentInfo,getDepartmentIdByStationId } from '../services/user.js';
 
-import { ElTabs, ElTabPane } from 'element-plus';
+import { ElTabs, ElTabPane ,ElButton,} from 'element-plus';
+
 import Question from '../components/Question.vue';
 
 
