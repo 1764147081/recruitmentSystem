@@ -1,10 +1,15 @@
 <template>
+<div class="showQuestionnaire" v-if="!showEdit">
+
   <div class="questionnaire">
     <h3 v-if="ifCreate" >{{ form.title }}</h3>
     <h4 v-if="ifCreate">开始时间：{{ form.startTime }}</h4>
     <h4 v-if="ifCreate">结束时间：{{ form.endTime }}</h4>
     <el-button v-if="!ifCreate" @click="show = true">创建问卷</el-button>
-  <el-button v-if="ifCreate">添加</el-button>
+    <el-button v-if="ifCreate" @click="showEdit=true">添加</el-button>
+    <el-button v-if="ifCreate" @click="handleDelete">删除</el-button>
+
+
   </div>
 
 
@@ -45,40 +50,86 @@
     <el-table :data="questionList" >
       <el-table-column prop="content" label="题目名称" width="180" />
       <el-table-column prop="type" label="题目类型" width="200" />
-      <el-table-column label="操作" width="100">
-        <template slot-scope="scope">
-          <el-button  size="small" @click="">删除</el-button>
-          <el-button  size="small" @click="">编辑</el-button>
-
-        </template>
-    </el-table-column>
     </el-table>
-    <el-button type="primary" @click="">发布</el-button>
+    <el-button type="primary" @click="handlePublish">发布</el-button>
+
+  </div> 
+</div>
 
 
+<div class="editQuestion" v-if="showEdit">
+  <h1>填报表</h1>
 
+  <el-button @click="showEdit=false" style="margin-bottom: 10px;">返回</el-button>
+  <div class="dropdown-container">
+  <el-dropdown>
+  <span class="el-dropdown-link">
+    请选择题目类型
+    <el-icon class="el-icon--right">
+      <ArrowDown />
+    </el-icon>
+  </span>
+  <el-dropdown-menu v-slot:dropdown>
+    <el-dropdown-item @click="type = 3">简答题</el-dropdown-item>
+    <el-dropdown-item @click="type = 1">单选题</el-dropdown-item>
+    <el-dropdown-item @click="type = 2">多选题</el-dropdown-item>
+  </el-dropdown-menu>
+  </el-dropdown>
   </div>
-  
+  <div class="form-container">
+  <el-form :model="formdata" :rules="rules" ref="formRef" label-width="120px">
+    <el-form-item label="请输入题目" prop="content">
+      <el-input v-model="formdata.content" />
 
-  
- 
+    </el-form-item>
+    <el-form-item v-if="type!==3" label="请输入选项" prop="options">
+      <el-input v-model="formdata.options[0].optionContent" />
+      <el-input v-model="formdata.options[1].optionContent" />
+      <el-input v-model="formdata.options[2].optionContent" />
+      <el-input v-model="formdata.options[3].optionContent" />
+    </el-form-item>
+    <el-form-item>
+      <el-button @click="addQuestions">提交</el-button>
+    </el-form-item>
+
+  </el-form>
+
+</div>
+
+
+
+
+</div>
 </template>
 <script setup>
-import { de } from 'element-plus/es/locales.mjs';
-import { createQuestionnaire,getQuestionnaireDetailedById,getQuestionnaire } from '../services/user.js';
-import {ElMessage,ElTableColumn,ElButton} from 'element-plus'
+import { createQuestionnaire,getQuestionnaireDetailedById,getQuestionnaire,addQuestion,publishQuestionnaire,deleteQuestionnaire } from '../services/user.js';
+import { 
+  ElMessage, 
+  ElTableColumn, 
+  ElButton,
+  ElDropdown,       
+  ElDropdownMenu,   
+  ElDropdownItem,   
+  ElIcon            
+} from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
 
 
 
 import {ref,reactive} from 'vue'
 import { onMounted } from 'vue'
 import { watch } from 'vue';
+
+
+   
+
 const props = defineProps({
+
    departmentId: {
 
     type: Number,
     required: true
-  }
+  },
 })
 
 const form=reactive({
@@ -90,6 +141,8 @@ const form=reactive({
 
 })
 
+const questionnaireId=ref(0);
+const sort=ref(0);
 
 
 
@@ -102,13 +155,60 @@ watch(()=>props.departmentId,(newId)=>{
 })
 
 
-
 const ifCreate = ref(false);
 const show = ref(false);
+const showEdit=ref(false);
 
+//获取题目
 const questionList = ref([
 
 ]);
+
+
+//编辑题目
+const type=ref(0)
+const formdata = reactive({
+    departmentId:props.departmentId,
+    questionnaireId:questionnaireId.value,
+    type:type.value,
+    content:'',
+    sort:sort.value+2,
+    options:[
+      {
+        optionContent:'',
+        optionSort:0
+      },
+      {
+        optionContent:'',
+        optionSort:1
+      },
+      {
+        optionContent:'',
+        optionSort:2
+      },
+      {
+        optionContent:'',
+        optionSort:3
+
+      }
+
+    ]
+})
+
+async function addQuestions() {
+  try {
+    if(type.value===3){
+      formdata.options=[]
+    }
+    await addQuestion([formdata]);
+    ElMessage.success('添加成功');
+    getQuestion(props.departmentId);
+  } catch (error) {
+    ElMessage.error('添加失败');
+  }
+}
+
+
 
 //获取问卷列表
 async function  fetchQuestionnaire() {
@@ -122,6 +222,8 @@ async function  fetchQuestionnaire() {
         form.startTime=result.data.startTime;
         form.endTime=result.data.endTime;
         form.status=result.data.status;
+        questionnaireId.value=result.data.id;
+        console.log(questionnaireId.value)
     }
   } catch (error) {
     console.error("发生错误:", error);
@@ -135,7 +237,7 @@ async function getQuestion(){
     if(result.code===200){
       console.log(result.data);
       questionList.value=result.data.questions;
-
+      sort.value=result.data.questions.length;
     }
   } catch (error) {
     console.error("发生错误:", error);
@@ -171,5 +273,35 @@ async function handleCreateQuestionnaire() {
   }
 }
 
+
+
+async function handlePublish() {
+  try {
+    const result = await publishQuestionnaire(questionnaireId.value);
+    if(result.code===200){
+      ElMessage.success('发布成功');
+    }else{
+      ElMessage.error('发布失败');
+      console.log(result);
+    }
+  } catch (error) {
+    console.error("发生错误:", error);
+  }
+}
+
+async function handleDelete(){
+  try {
+    const result = await deleteQuestionnaire(questionnaireId.value);
+    if(result.code===200){
+      ElMessage.success('删除成功');
+    }else{
+      ElMessage.error('删除失败');
+      console.log(result);
+    }
+  } catch (error) {
+    console.error("发生错误:", error);
+  }
+
+}
 
 </script>

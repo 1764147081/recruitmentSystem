@@ -38,7 +38,8 @@
         <p>这里是报名管理内容</p>
       </el-tab-pane>
       <el-tab-pane label="题库管理" name="questionBank">
-        <Question :departmentId="departmentInfo.departmentId" />
+        <Question :departmentId="departmentInfo.id" />
+    
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -51,6 +52,10 @@ import { getDepartmentInfo,getDepartmentIdByStationId } from '../services/user.j
 
 import { ElTabs, ElTabPane } from 'element-plus';
 import Question from '../components/Question.vue';
+
+
+
+
 
 
 // 获取路由参数

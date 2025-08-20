@@ -161,6 +161,30 @@ export function getDepartmentIdByStationId(stationId){
   })
 }
 
+export function publishQuestionnaire(questionnaireId) {
+  return service({
+    url: `/questionnaire/publish?questionnaireId=${questionnaireId}`,
+    method: 'post'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
+export function deleteQuestionnaire(questionnaireId) {
+  return service({
+    url: `/questionnaire/delete?questionnaireId=${questionnaireId}`,
+    method: 'post'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
+
+
 
 
 
