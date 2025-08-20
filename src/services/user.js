@@ -174,7 +174,7 @@ export function publishQuestionnaire(questionnaireId) {
 
 export function deleteQuestionnaire(departmentId) {
   return service({
-    url: `/questionnaire/delete?questionnaireId=${departmentId}`,
+    url: `/questionnaire/delete?departmentId=${departmentId}`,
     method: 'post'
   }).then(res => {
     return res.data;
