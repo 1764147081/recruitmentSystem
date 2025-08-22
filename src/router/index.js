@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 const routes = [
   {
     path: '/login',
@@ -10,17 +10,6 @@ const routes = [
     name: 'layout',
     component: () => import('@/pages/Layout.vue'),
     children: [
-    //   {
-    //     path: '/',
-    //     name: 'home',
-    //     component: () => import('@/pages/Home.vue'),
-    //   },
-    //   {
-    //     path: '/user',
-    //     name: 'user',
-    //     component: () => import('@/pages/User.vue'),
-    //   },
-     
       {
         path: '/stationIndex',
         name: 'stationIndex',
@@ -49,13 +38,12 @@ const routes = [
   }
 ]
 const router = createRouter({
-  history: createWebHistory(),
+  // 将history模式改为hash模式
+  history: createWebHashHistory(),
   routes,
 });
 
-
-
-
+// 路由守卫配置保持不变
 // router.beforeEach(async (to, from, next) => {
 //   if (!store.state.hasAuth) {
 //     await store.dispatch("setUserRouters");

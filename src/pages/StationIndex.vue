@@ -5,15 +5,33 @@
       <el-button type="warning" @click="setDepartment = true;setStation=false"  >添加部门</el-button>
       <el-button type="warning" @click="setStation = true;setDepartment=false">设置模块</el-button>
       <el-button type="danger" @click="deleteDepartment">删除</el-button>
+      <el-button  @click="getPermission">查看管理员</el-button>
+      <el-button type="primary" @click="getDepartmentDetail">编辑</el-button>
+
+
   </div>
   <recursive-menu :menu-data="menuData":key="menuKey" />
   <div>
-    <h1>设置管理员</h1>
+    <h1>搜索人员</h1>
     <el-input placeholder="请输入管理员姓名" v-model="username"/>
     <el-button type="primary" @click="search">查询</el-button>
     <el-button type="primary" @click="setPermission">添加</el-button>
   </div>
-  
+  <div class="permissionTable">
+    <el-table :data="userInfo" style="width: 100%">
+    <el-table-column prop="name" label="姓名" width="300" />
+    <el-table-column prop="depart" label="学院" width="300" />
+    <el-table-column prop="username" label="学号" width="300" />
+    <el-table-column label="操作" min-width="300">
+      <template #default="scope">
+        <el-button link type="danger" size="small" @click="handlePermissionDelete(scope.row)">
+          删除
+        </el-button>
+     </template>
+    </el-table-column>
+    </el-table>
+  </div>
+
 
   <div class="content">
               <div v-if="setDepartment">
@@ -83,8 +101,54 @@
                   </el-form-item>
                 </el-form>
               </div>
-  </div>        
-              
+  </div>  
+  
+  
+
+  <div class="editForm" v-if="ifEdit">
+    <el-form :model="editForm"  label-width="120px" class="demo-ruleForm">
+      <el-form-item label="设置部门名称" prop="name">
+         <el-input v-model="editForm.name" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="输入部门描述" prop="description">
+         <el-input type="textarea" v-model="editForm.description" autocomplete="off" />
+      </el-form-item>
+      <el-form-item label="上传部门海报" prop="image" v-if="station.getIsDepartment == 1">
+        <el-upload
+          action="#"  
+          :auto-upload="false"  
+          :on-change="handleEditFileChange"  
+          :show-file-list="false"
+          accept="image/*"
+        >
+        <div class="upload-square">
+        <div v-if="!editForm.image" class="upload-placeholder">
+          <span class="plus-icon">+</span>
+          <span class="upload-text">点击上传</span>
+        </div>
+        <img v-else :src="editForm.image" alt="部门海报预览" class="preview-image">
+    
+        <div v-if="editForm.image" class="image-actions">
+        <el-button
+          type="danger"
+          icon="el-icon-delete"
+        @click.stop="handleRemoveEditImage"
+        circle
+        size="small"
+      ></el-button>
+    </div>
+  </div>
+  <div class="upload-tip">请选择图片文件（支持 JPG/PNG）</div>
+      </el-upload>
+      </el-form-item>
+      <el-form-item>
+        <el-button  @click="edit">确定</el-button>
+        <el-button @click="ifEdit=false">取消</el-button>
+      </el-form-item>
+    </el-form>  
+  </div>
+
+  
    
  
   
@@ -101,12 +165,15 @@ import RecursiveMenu from '../components/RecursiveMenu.vue'
 import { getStationView } from '../store/stationTree'
 import { onMounted } from 'vue'
 import { stat } from 'fs'
+import { getUserInfoByUsername ,getDepartmentInfo,getStationInfo} from '@/services/user'
+
+import constants from 'constants'
 
 const BaseUrl='https://i.sdu.edu.cn/XSZX/NXXT/api'
 const user = useUserStore()
 const station = useStationStore()
 const menuData = ref<Station[]>([]); 
-let type=""
+
 
 const fetchMenuData = async () => {
   try {
@@ -121,11 +188,15 @@ const fetchMenuData = async () => {
 
 onBeforeMount(fetchMenuData)
 
+
+
+
 const menuKey = ref(0);
 
 const refreshMenu = () => {
   menuKey.value += 1;
   fetchMenuData();
+
 };
 
 
@@ -133,7 +204,7 @@ const refreshMenu = () => {
 
 
 
-
+const ifEdit=ref(false)
 const setDepartment=ref(false)
 const setStation=ref(false)
 const username=ref("")
@@ -156,6 +227,15 @@ const stationList = reactive({
   isDepartment: 0,
 })
 
+const editForm = reactive({
+  name: '',
+  description: '',
+  image: '',
+  id:0,
+  pId:0,
+  stationId:0,
+})
+
 const stationStore:Station[] = []
 const stationMap = ref(stationStore)
 
@@ -173,6 +253,16 @@ function handleFileChange(file: any) {
 
 }
 
+function handleEditFileChange(file: any) {
+  if (!file.raw.type.startsWith('image/')) {
+    ElMessage.error('只能上传图片文件！');
+    return false;
+  }
+  editForm.image = URL.createObjectURL(file.raw);
+  console.log(editForm.image)
+}
+
+
 // 删除图片
 function handleRemoveImage() {
   if (formData.image.startsWith('blob:')) {
@@ -180,6 +270,14 @@ function handleRemoveImage() {
   }
   formData.image = '';
 }
+
+function handleRemoveEditImage() {
+  if (formData.image.startsWith('blob:')) {
+    URL.revokeObjectURL(editForm.image);
+  }
+  editForm.image = '';
+}
+
 
 // 组件卸载时清理
 onBeforeUnmount(() => {
@@ -204,7 +302,7 @@ async function search() {
     let response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': user.getToken
+        'Authorization':`Bearer ${user.getToken}`
       }
     })
     let data = await response.json()
@@ -217,28 +315,6 @@ async function search() {
   }
 }
 
-async function setPermission() {
-  const queryParams = new URLSearchParams({
-  username:username.value,
-  stationId:station.getParentId.toString()
-})
-  const url = `${BaseUrl}/permission/set?${queryParams}`
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${user.getToken}`
-    }
-  })
-  let data = await response.json()
-  if(data.code == 200) {
-    alert("设置成功")
-  }else{
-    alert("设置失败")
-  }
-
-
-}
 
 async function addStation() {
   station.changeName(stationList.name);
@@ -343,6 +419,218 @@ async function deleteDepartment(){
   
 
 
+
+}
+
+//权限设置部分
+
+interface User {
+  username: number,
+  depart: string,
+  name: string,
+  permissionId: number,
+
+}
+
+const userInfo = ref<User[]>([])
+
+
+
+async function getPermission(){
+  try{
+    userInfo.value = []
+    const response = await fetch(`${BaseUrl}/permission/show/station?stationId=${station.getId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${user.getToken}`
+      }
+    })
+   
+    let res = await response.json()
+    const tempUsers: User[] = []
+          for (const item of res.data) {
+        try {
+          const userDetail = await getUserInfoByUsername(item.username)
+          console.log('用户详情:', userDetail)
+
+          if (userDetail.code === 200 && userDetail.data) {
+            tempUsers.push({
+              username: item.username,
+              depart: userDetail.data.depart || '',
+              name: userDetail.data.name || '',
+              permissionId:item.id
+
+            })
+          } else {
+            // 如果获取详情失败，至少保留用户名
+            tempUsers.push({
+              username: item.username,
+              depart: '无权访问',
+              name: '无权访问',
+              permissionId:item.id
+
+            })
+          }
+        } catch (error) {
+          console.log(`获取用户${item.username}信息失败:`, error)
+          tempUsers.push({
+            username: item.username,
+            depart: '获取失败',
+            name: '获取失败',
+            permissionId:item.id
+
+          })
+        }
+      }
+      userInfo.value = tempUsers
+      console.log(userInfo.value)
+    
+    
+
+  }catch(error){
+  console.error('Request failed:', error);
+  ElMessage.error('无管理员');
+  throw error;
+}
+
+ } 
+
+ async function setPermission() {
+  const queryParams = new URLSearchParams({
+  stationId:station.getId.toString(),
+  username:username.value,
+})
+  const url = `${BaseUrl}/permission/set?${queryParams}`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${user.getToken}`
+    }
+  })
+  let data = await response.json()
+  if(data.code == 200) {
+    ElMessage.success("设置成功")
+    getPermission()
+    console.log(data)
+  }else{
+    ElMessage.error("设置失败")
+  }
+
+
+}
+
+
+async  function handlePermissionDelete  (row: any) {
+  const permissionId = row.permissionId; // 获取 permissionId
+  console.log('要删除的permissionId:', permissionId);
+  const queryParams = new URLSearchParams({
+    permissionId:permissionId.toString(),
+  })
+  const url = `${BaseUrl}/permission/del?${queryParams}`
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${user.getToken}`
+    }
+  })
+  let data = await response.json()
+  if(data.code == 200) {
+    ElMessage.success("删除成功")
+    getPermission()
+    console.log(data)
+  }else{
+    ElMessage.error("删除失败")
+  }
+
+  
+};
+
+async function getDepartmentDetail(){
+  ifEdit.value=true
+  let res:any = {}
+  if(station.getIsDepartment == 1) {
+    res = await getDepartmentInfo(station.getId)
+  }else{
+    res = await getStationInfo(station.getId)
+  }
+  
+  editForm.name = res.data.name
+  editForm.description = res.data.description
+  editForm.id = res.data.id
+  editForm.pId = res.data.pId
+  if(station.getIsDepartment == 1) {
+    editForm.image=res.data.image
+    editForm.stationId = res.data.stationId
+  }
+ 
+
+}
+
+async function edit(){
+  if(station.getIsDepartment == 0) {
+    try{
+    const response = await fetch(`${BaseUrl}/station/edit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.getToken}`
+      },
+      body: JSON.stringify({
+        id: editForm.id,
+        pId: editForm.pId,
+        name: editForm.name,
+        description: editForm.description,
+      })
+    })
+    let data = await response.json()
+    if(data.code == 200) {
+      ElMessage.success("编辑成功")
+      getPermission()
+      console.log(data)
+    }else{
+      ElMessage.error("编辑失败")
+    }
+  }catch(error){
+    console.error('Request failed:', error);
+    ElMessage.error('编辑失败');
+    throw error;
+  }
+    
+  }else{
+    try{
+    const response = await fetch(`${BaseUrl}/department/edit`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.getToken}`
+      },
+      body: JSON.stringify({
+        id: editForm.id,
+        pId: editForm.pId,
+        name: editForm.name,
+        description: editForm.description,
+        image:editForm.image,
+        stationId:editForm.stationId,
+      })
+    })
+    let data = await response.json()
+    if(data.code == 200) {
+      ElMessage.success("编辑成功")
+      getPermission()
+      console.log(data)
+    }else{
+      ElMessage.error("编辑失败")
+    }
+  }catch(error){
+    console.error('Request failed:', error);
+    ElMessage.error('编辑失败');
+    throw error;
+  }
+  }
+
+  
 
 }
 

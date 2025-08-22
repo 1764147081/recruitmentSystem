@@ -8,6 +8,8 @@
     <el-button v-if="!ifCreate" @click="show = true">创建问卷</el-button>
     <el-button v-if="ifCreate" @click="showEdit=true">添加</el-button>
     <el-button v-if="ifCreate" @click="handleDelete">删除</el-button>
+    <el-button v-if="ifCreate"  @click="show = true">编辑</el-button>
+
 
 
   </div>
@@ -69,11 +71,13 @@
       <ArrowDown />
     </el-icon>
   </span>
-  <el-dropdown-menu v-slot:dropdown>
+  <template #dropdown>
+  <el-dropdown-menu>
     <el-dropdown-item @click="type = 3">简答题</el-dropdown-item>
     <el-dropdown-item @click="type = 1">单选题</el-dropdown-item>
     <el-dropdown-item @click="type = 2">多选题</el-dropdown-item>
   </el-dropdown-menu>
+  </template>
   </el-dropdown>
   </div>
   <div class="form-container">
@@ -102,7 +106,7 @@
 </div>
 </template>
 <script setup>
-import { createQuestionnaire,getQuestionnaireDetailedById,getQuestionnaire,addQuestion,publishQuestionnaire,deleteQuestionnaire } from '../services/user.js';
+import { createQuestionnaire,getQuestionnaireDetailedById,getQuestionnaire,addQuestion,publishQuestionnaire,deleteQuestionnaire } from '../services/user';
 import { 
   ElMessage, 
   ElTableColumn, 
@@ -113,9 +117,6 @@ import {
   ElIcon            
 } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
-
-
-
 import {ref,reactive} from 'vue'
 import { onMounted } from 'vue'
 import { watch } from 'vue';
@@ -170,7 +171,7 @@ const type=ref(0)
 const formdata = reactive({
     departmentId:props.departmentId,
     questionnaireId:questionnaireId.value,
-    type:1,
+    type:type.value,
     content:'',
     sort:sort.value+1,
     options:[
@@ -248,7 +249,9 @@ async function getQuestion(){
 
     }
   } catch (error) {
-    console.error("发生错误:", error);
+    console.log("发生错误:", error);
+    questionList.value=[]
+
   }
 
 }
@@ -271,6 +274,8 @@ async function handleCreateQuestionnaire() {
     });
     if(result.code===200){
       ElMessage.success('创建成功');
+      fetchQuestionnaire(props.departmentId)
+
     }else{
       ElMessage.error('创建失败');
       console.log(result);

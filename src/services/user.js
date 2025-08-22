@@ -13,6 +13,17 @@ export function getUserInfo() {
     throw err;
   });
 }
+export function getUserInfoByUsername(username) {
+  return service({
+    url: `/user/info?username=${username}`,
+    method: 'get',
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
 
 // 更新用户信息
 export function updateUserInfo(data) {
@@ -95,6 +106,20 @@ export function getDepartmentInfo(departmentId) {
     throw err;
   });
 }
+
+export function getStationInfo(stationId){
+  return service({
+    url: `/station/view?id=${stationId}`,
+    method: 'get'
+  }).then(res=>{
+    return res.data;
+  }).catch(err=>{
+    throw err;
+
+  })
+}
+
+
 
 export function createQuestionnaire(departmentId,data) {
   return service({
@@ -183,6 +208,16 @@ export function deleteQuestionnaire(departmentId) {
   });
 }
 
+export function getFinishedQuestionnaire(departmentId) {
+  return service({
+    url: `/answer/view/department?departmentId=${departmentId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
 
 
 

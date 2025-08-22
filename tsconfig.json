@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "types": [
+      "web",  // 优先使用web类型定义
+      "web-bluetooth",
+      "webgl2"
+    ],
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "jsx": "preserve",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable",
+      "WebWorker",
+      "ScriptHost",
+      "ES2017.ArrayBuffer"
+    ],
+    "skipLibCheck": true,  // 关键：跳过库类型检查，避免冲突
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "allowJs": true,
+    "checkJs": false,
+    "allowSyntheticDefaultImports": true,
+    "outDir": "./dist/ts",
+    "rootDir": "./src",
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.js", "vite.config.ts"],
+  "references": [{ "path": "./tsconfig.node.json" }],
+  "exclude": ["node_modules/@types/node/url.d.ts"]  // 排除冲突的node类型文件
+}

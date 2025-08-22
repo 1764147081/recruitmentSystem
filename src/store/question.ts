@@ -16,7 +16,7 @@ export const useQuestionStore = defineStore('question', {
         return{
            content:'',
            type:0,
-           options:[]
+           options:[]as Option[]
         }
     },
     actions:{
@@ -29,7 +29,7 @@ export const useQuestionStore = defineStore('question', {
         }
         ,
         addOption(option:Option){
-            this.options.push(option)
+                this.options.push(option)
         }
         ,
         changeOptionSort(value:number){

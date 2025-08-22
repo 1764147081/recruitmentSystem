@@ -55,8 +55,8 @@ export const useStationStore = defineStore('station',{
             return this.description
         }
         ,
-        getChildren(){
-            return this.children
+        getChildren():Station[]{
+            return this.children 
         }
         ,
         getImg():string{
@@ -79,7 +79,7 @@ export const useStationStore = defineStore('station',{
             img:'',
             stationId:0,
             isDepartment:0,
-            children:[]
+            children:[]as Station[]
 
 
         }

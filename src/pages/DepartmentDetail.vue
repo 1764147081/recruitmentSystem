@@ -35,7 +35,7 @@
         <!-- 可以添加更多部门信息字段 -->
       </el-tab-pane>
       <el-tab-pane label="报名管理" name="registration">
-        <p>这里是报名管理内容</p>
+        <Station :departmentId="departmentInfo.id" />
       </el-tab-pane>
       <el-tab-pane label="题库管理" name="questionBank">
         <Question :departmentId="departmentInfo.id" />
@@ -48,9 +48,10 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { getDepartmentInfo,getDepartmentIdByStationId } from '../services/user.js';
+import { getDepartmentInfo,getDepartmentIdByStationId } from '../services/user';
 
 import { ElTabs, ElTabPane ,ElButton,} from 'element-plus';
+import Station from '../components/Station.vue';
 
 import Question from '../components/Question.vue';
 

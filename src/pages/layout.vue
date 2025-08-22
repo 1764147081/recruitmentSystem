@@ -57,17 +57,6 @@
                     </el-sub-menu>
                   </template>
                 </el-sub-menu>
-
-                <!-- 我的收藏 -->
-                <el-sub-menu index="2">
-                  <template #title>
-                    <span>我的收藏</span>
-                  </template>
-                  <el-menu-item-group>
-                    <el-menu-item index="21">选项1</el-menu-item>
-                    <el-menu-item index="22">选项2</el-menu-item>
-                  </el-menu-item-group>
-                </el-sub-menu>
               </el-menu>
             </el-col>
           </el-row>
@@ -84,8 +73,8 @@
 import { RouterLink, useRouter } from 'vue-router'
 import { useUserStore } from '../store/user'
 import { useStationStore } from '../store/station'
-import { Avatar } from '@element-plus/icons-vue'
-import { getUserInfo, getQuestionnaireStatus, unfoldStation } from '../services/user.js'
+
+import { getUserInfo, getQuestionnaireStatus, unfoldStation } from '../services/user'
 import { ref, onBeforeMount, reactive, h } from 'vue'
 
 const baseURL = "https://i.sdu.edu.cn/XSZX/NXXT/api"
@@ -186,8 +175,7 @@ const initializeStationData = async () => {
     await fetchStationTree(rootStationId)
   } catch (error) {
     console.error('初始化站点数据失败:', error)
-    console.error('错误详情:', error.message)
-    console.error('错误堆栈:', error.stack)
+
   }
 }
 async function fetchUserInfo() {
@@ -242,7 +230,7 @@ const goToProfile = () => {
 }
 
 // 跳转到部门详细页
-const goToDepartment = (departmentId) => {
+const goToDepartment = (departmentId: number) => {
   router.push({ name: 'departmentDetail', params: { id: departmentId } })
 }
 

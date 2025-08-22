@@ -1,7 +1,8 @@
 
 import { stat } from "fs";
-import {Station} from "./station.ts"
-import {useUserStore} from "./user.ts";
+import { Station } from "./station.js";
+import { useUserStore } from "./user.js";
+
 
 
 

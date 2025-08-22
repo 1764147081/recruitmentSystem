@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    // 关键修正：同步改为 NodeNext
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext"]
+  },
+  "include": ["vite.config.ts"]
+}
