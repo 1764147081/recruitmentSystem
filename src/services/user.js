@@ -220,6 +220,16 @@ export function getFinishedQuestionnaire(departmentId) {
 }
 
 
+export function getAnswerByFinishedId(finishedId){
+  return service({
+    url: `/answer/view/answers?finishId=${finishedId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
 
 
 

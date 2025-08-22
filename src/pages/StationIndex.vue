@@ -1,7 +1,6 @@
 <template>
   <div>
     <h1>编辑组织目录</h1>
-      <h3 class="edit" @click="">组织目录</h3>
       <el-button type="warning" @click="setDepartment = true;setStation=false"  >添加部门</el-button>
       <el-button type="warning" @click="setStation = true;setDepartment=false">设置模块</el-button>
       <el-button type="danger" @click="deleteDepartment">删除</el-button>
@@ -10,10 +9,12 @@
 
 
   </div>
-  <recursive-menu :menu-data="menuData":key="menuKey" />
-  <div>
-    <h1>搜索人员</h1>
-    <el-input placeholder="请输入管理员姓名" v-model="username"/>
+  <recursive-menu :menu-data="menuData":key="menuKey"  class="index"/>
+
+  <h3>搜索人员</h3>
+
+  <div class="search">
+    <el-input placeholder="请输入管理员姓名" v-model="username" class="search-input"/>
     <el-button type="primary" @click="search">查询</el-button>
     <el-button type="primary" @click="setPermission">添加</el-button>
   </div>
@@ -33,8 +34,8 @@
   </div>
 
 
-  <div class="content">
-              <div v-if="setDepartment">
+  <div>
+              <div class="department" v-if="setDepartment">
                 <el-form :model="formData"  label-width="120px" class="demo-ruleForm">
                     <el-form-item label="设置部门名称" prop="name">
                        <el-input v-model="formData.name" autocomplete="off" />
@@ -81,7 +82,8 @@
 
 
 
-              <div v-if="setStation">
+              <div class="station" v-if="setStation">
+
                 <el-form :model="stationList"   label-width="120px" class="demo-ruleForm">
                   <el-form-item label="设置模块名称" prop="name">
                     <el-input v-model="stationList.name" autocomplete="off" />
@@ -700,4 +702,153 @@ async function edit(){
   font-size: 12px;
   color: #8c939d;
 }
+
+
+/* 弹窗通用样式 */
+.department, .editForm, .station {
+  /* 固定定位确保弹窗在屏幕中间 */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  
+  /* 弹窗外观样式 */
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  padding: 24px;
+  min-width: 500px;
+  
+  /* 确保弹窗在最上层 */
+  z-index: 1000;
+}
+
+/* 弹窗关闭时隐藏 */
+.department[v-if="!setDepartment"],
+.editForm[v-if="!ifEdit"],
+[v-if="!setStation"] {
+  display: none;
+}
+
+/* 背景遮罩层 */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* 当弹窗显示时显示遮罩层 */
+.department[v-if="setDepartment"] ~ body::before,
+.editForm[v-if="ifEdit"] ~ body::before,
+[v-if="setStation"] ~ body::before {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 上传区域样式优化 */
+.upload-square {
+  width: 200px;
+  height: 200px;
+  border: 1px dashed #ddd;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.upload-square:hover {
+  border-color: #409eff;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.upload-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+}
+
+.plus-icon {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.upload-text {
+  font-size: 14px;
+}
+
+.image-actions {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+
+.upload-tip {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+/* 表单样式微调 */
+.demo-ruleForm {
+  width: 100%;
+}
+
+.el-form-item {
+  margin-bottom: 20px;
+}
+
+.index{
+  width: 50%;
+  border: 1px solid #0e0101;
+  border-radius: 8px;
+  margin-left: 20%;
+  margin-top: 5%;
+
+}
+
+.permissionTable{
+  width: 50%;
+  margin-left: 20%;
+  border: 1px solid #0e0101;
+  margin-top: 5%;
+
+}
+
+
+.search {
+  display: flex; /* 启用弹性布局 */
+  align-items: center; /* 垂直居中对齐元素 */
+  gap: 16px; /* 元素之间的间距，可根据需要调整 */
+  padding: 10px 0; /* 可选：添加上下内边距 */
+}
+
+/* 可选：调整标题样式，避免过大影响布局 */
+.search h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.search-input {
+  width: 300px;
+  margin-left: 20%;
+}
+
 </style>
