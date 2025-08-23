@@ -11,7 +11,8 @@
       v-for="child in item.children"
       :key="child.id"
       :item="child"
-      @item-click="(id,isDepartment,parentId) => $emit('item-click', id,isDepartment,parentId)"
+      @item-click="(id,isDepartment,parentId,name) => $emit('item-click', id,isDepartment,parentId,name)"
+
 
     />
   </el-sub-menu>
@@ -44,13 +45,14 @@ const handleSubMenuOpen = (index) => {
 
 const handleTitleClick = (e) => {
   e.stopPropagation();
-  emit('item-click', props.item.id,props.item.isDepartment,props.item.parentId);
+  emit('item-click', props.item.id,props.item.isDepartment,props.item.parentId,props.item.name);
 
 
 };
 
 const handleItemClick = () => {
-  emit('item-click', props.item.id,props.item.isDepartment,props.item.parentId);
+  emit('item-click', props.item.id,props.item.isDepartment,props.item.parentId,props.item.name);
+
 
 
 };

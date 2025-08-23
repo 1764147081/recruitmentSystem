@@ -62,6 +62,7 @@
           </el-row>
         </el-aside>
         <el-main>
+
           <RouterView />
         </el-main>
       </el-container>
@@ -157,9 +158,19 @@ const initializeStationData = async () => {
   }
 
   try {
-    console.log('开始初始化站点数据')
-    const rootStationId = 1
 
+    console.log('开始初始化站点数据')
+    async function getPermission() {
+      const username = parseInt(userInfo.value.username)
+      const res = await fetch(`${baseURL}/permission/show/user?username=${username}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.getToken}`
+        }
+      }).then(res=>res.json())
+      return res.data[0].stationId
+    }
+   const rootStationId = await getPermission()
     console.log('使用根站点ID获取站点树:', rootStationId)
     await fetchStationTree(rootStationId)
   } catch (error) {

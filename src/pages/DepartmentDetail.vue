@@ -22,16 +22,6 @@
           <p>{{ departmentInfo.description }}</p>
         </div>
 
-        <!-- 管理员信息 -->
-        <h1>部门管理员</h1>
-        <div class="admin-info">
-          <ul class="admin-list">
-            <li v-for="admin in departmentInfo.administrators" :key="admin.id">
-              <span class="admin-name">{{ admin.name }}</span>
-              <span class="admin-contact">{{ admin.contact }}</span>
-            </li>
-          </ul>
-        </div>
         <!-- 可以添加更多部门信息字段 -->
       </el-tab-pane>
       <el-tab-pane label="报名管理" name="registration">

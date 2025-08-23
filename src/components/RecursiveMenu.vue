@@ -20,6 +20,8 @@
 import { ref } from 'vue';
 import MenuItem from './MenuItem.vue';
 import { useStationStore } from '../store/station';
+import { ElMessage } from 'element-plus';
+
 
 const stationStore = useStationStore();
 const props = defineProps({
@@ -33,7 +35,8 @@ const props = defineProps({
 const activeMenu = ref('');
 
 // 直接监听子组件的 item-click 事件
-const handleItemClick = (itemId,isDepartment,parentId) => {
+const handleItemClick = (itemId,isDepartment,parentId,name) => {
+
 
 
 
@@ -42,10 +45,14 @@ const handleItemClick = (itemId,isDepartment,parentId) => {
   stationStore.changeId(itemId)
   stationStore.changeIsDepartment(isDepartment)
   stationStore.changeParentId(parentId)
-
   console.log(stationStore.getIsDepartment)
   console.log(stationStore.getId)
   console.log(stationStore.getParentId)
+  ElMessage({
+    message: '选择了菜单项 ' + name+"可以进行操作",
+
+    type: 'info',
+  })
 
 
 

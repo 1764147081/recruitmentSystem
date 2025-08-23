@@ -59,8 +59,6 @@ export async function getStationView(id: number): Promise<Station> {
   station.id = data2.data.id;
   station.parentId = data2.data.pId;
   station.description = data2.data.description;
-  station.img = data2.data.img;
-  station.stationId = data2.data.stationId;
   station.isDepartment = data2.data.isDepartment;
 
   try {

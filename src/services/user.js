@@ -162,17 +162,7 @@ export function getQuestionnaireDetailedById(departmentId){
 }
 
 
-export function addQuestion(question) {
-  return service({
-    url: `/questionnaire/edit/questions`,
-    method: 'post',
-    data:question
-  }).then(res => {
-    return res.data;
-  }).catch(err => {
-    throw err;
-  });
-}
+
 
 export function getDepartmentIdByStationId(stationId){
   return service({
@@ -230,6 +220,18 @@ export function getAnswerByFinishedId(finishedId){
     throw err;
   });
 }
+
+export function deleteQuestion(questionId,departmentId){
+  return service({
+    url: `/questionnaire/delete/questions?questionId=${questionId}&departmentId=${departmentId}`,
+    method: 'post'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
 
 
 

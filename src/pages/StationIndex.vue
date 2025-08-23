@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <h1>编辑组织目录</h1>
+  <h1>编辑组织目录（请点击菜单字样进行选中）</h1>
+  <div v-if="hasSelected">
       <el-button type="warning" @click="setDepartment = true;setStation=false"  >添加部门</el-button>
       <el-button type="warning" @click="setStation = true;setDepartment=false">设置模块</el-button>
       <el-button type="danger" @click="deleteDepartment">删除</el-button>
@@ -18,7 +18,7 @@
     <el-button type="primary" @click="search">查询</el-button>
     <el-button type="primary" @click="setPermission">添加</el-button>
   </div>
-  <div class="permissionTable">
+  <div class="permissionTable" v-if="hasSelected">
     <el-table :data="userInfo" style="width: 100%">
     <el-table-column prop="name" label="姓名" width="300" />
     <el-table-column prop="depart" label="学院" width="300" />
@@ -157,12 +157,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref,reactive, onBeforeUnmount } from 'vue'
+import { ref,reactive, onBeforeUnmount, watch } from 'vue'
 import { onBeforeMount } from 'vue'
 import { useUserStore } from '../store/user'
 import { useStationStore } from '../store/station'
 import { Station } from '../store/station'
-import { ElMessage,  ElForm, ElFormItem, ElInput, ElButton } from 'element-plus'
+import { ElMessage,  ElForm, ElFormItem, ElInput, ElButton, ElMessageBox } from 'element-plus'
 import RecursiveMenu from '../components/RecursiveMenu.vue'
 import { getStationView } from '../store/stationTree'
 import { onMounted } from 'vue'
@@ -201,11 +201,16 @@ const refreshMenu = () => {
 
 };
 
+watch(
+  () => station.getId,
+  (newVal) => {
+    hasSelected.value = !!newVal; // 当ID存在时认为已选中
+  }, // 初始化时立即执行
+);
 
 
 
-
-
+const hasSelected = ref(false);
 const ifEdit=ref(false)
 const setDepartment=ref(false)
 const setStation=ref(false)
@@ -402,21 +407,36 @@ async function addDepartment() {
 }
 
 async function deleteDepartment(){
-  try{
+  try {
+    // 显示确认弹窗
+    await ElMessageBox.confirm(
+      '确定要删除这个部门吗？',
+      '删除确认',
+      {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    // 用户确认后执行删除操作
     const res = await fetch(`${BaseUrl}/station/del?stationId=${station.getId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${user.getToken}`
       }
     })
+    
     if(res.status == 200) {
       ElMessage.success('部门删除成功');
+      refreshMenu();
     }
-    refreshMenu();
-  }catch(error){
-    console.error('Request failed:', error);
-    ElMessage.error('部门删除失败');
-    throw error;
+  } catch (error:any) {
+    // 如果是用户取消，不显示错误信息
+    if (error.name !== 'CanceledError') {
+      console.error('Request failed:', error);
+      ElMessage.error('部门删除失败');
+    }
   }
   
 
@@ -524,28 +544,47 @@ async function getPermission(){
 
 
 async  function handlePermissionDelete  (row: any) {
-  const permissionId = row.permissionId; // 获取 permissionId
-  console.log('要删除的permissionId:', permissionId);
-  const queryParams = new URLSearchParams({
-    permissionId:permissionId.toString(),
-  })
-  const url = `${BaseUrl}/permission/del?${queryParams}`
-  const response = await fetch(url, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${user.getToken}`
+  try {
+    // 显示确认弹窗
+    await ElMessageBox.confirm(
+      '确定要移除这个管理员吗？',
+      '删除确认',
+      {
+        confirmButtonText: '确认',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+    )
+    
+    // 用户确认后执行删除操作
+    const permissionId = row.permissionId;
+    const queryParams = new URLSearchParams({
+      permissionId: permissionId.toString(),
+    })
+    const url = `${BaseUrl}/permission/del?${queryParams}`
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user.getToken}`
+      }
+    })
+    
+    let data = await response.json()
+    if(data.code == 200) {
+      ElMessage.success("删除成功")
+      getPermission()
+    } else {
+      ElMessage.error("删除失败")
     }
-  })
-  let data = await response.json()
-  if(data.code == 200) {
-    ElMessage.success("删除成功")
-    getPermission()
-    console.log(data)
-  }else{
-    ElMessage.error("删除失败")
-  }
+  } catch (error:any) {
 
+    // 如果是用户取消，不显示错误信息
+    if (error.name !== 'CanceledError') {
+      console.error('删除失败:', error);
+      ElMessage.error('操作失败');
+    }
+  }
   
 };
 
@@ -571,7 +610,9 @@ async function getDepartmentDetail(){
 }
 
 async function edit(){
+  
   if(station.getIsDepartment == 0) {
+    console.log("编辑模块",station.getId,station.getParentId)
     try{
     const response = await fetch(`${BaseUrl}/station/edit`, {
       method: 'POST',
@@ -580,8 +621,8 @@ async function edit(){
         'Authorization': `Bearer ${user.getToken}`
       },
       body: JSON.stringify({
-        id: editForm.id,
-        pId: editForm.pId,
+        id: station.getId,
+        pId: station.getParentId,
         name: editForm.name,
         description: editForm.description,
       })
@@ -602,6 +643,7 @@ async function edit(){
     
   }else{
     try{
+    console.log("编辑部门",station.getId,station.getParentId)
     const response = await fetch(`${BaseUrl}/department/edit`, {
       method: 'POST',
       headers: {
@@ -609,12 +651,11 @@ async function edit(){
         'Authorization': `Bearer ${user.getToken}`
       },
       body: JSON.stringify({
-        id: editForm.id,
-        pId: editForm.pId,
+        pId: station.getParentId,
         name: editForm.name,
         description: editForm.description,
         image:editForm.image,
-        stationId:editForm.stationId,
+        stationId:station.getId,
       })
     })
     let data = await response.json()
@@ -825,8 +866,8 @@ body::before {
 }
 
 .permissionTable{
-  width: 50%;
-  margin-left: 20%;
+  width:80%;
+  margin-left: 10%;
   border: 1px solid #0e0101;
   margin-top: 5%;
 

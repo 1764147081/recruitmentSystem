@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue';
 import path from 'path';
 // https://vitejs.dev/config/
 export default defineConfig({
+     base: '/XSZX/NXXT/manage/', 
     plugins: [vue()],
     resolve: {
         // 路径别名配置（需与 tsconfig.json 中的 paths 对应）
