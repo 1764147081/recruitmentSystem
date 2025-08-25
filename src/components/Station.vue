@@ -107,21 +107,11 @@
 		const res1 = await getAnswer(row)
 		const res2 = await getQuestion()
 		for (let i = 0; i < res1.length; i++) {
-			// 检查问题数据是否存在
-			if (!res2[i]) {
-				console.warn(`问题数据不存在，索引: ${i}`);
-				continue;
-			}
 			list.push({
 				content: res2[i].content,
 				answer: ''
 			})
 			if (res1[i].optionId !== null) {
-				// 检查选项数据是否存在
-				if (!res2[i].option) {
-					console.warn(`问题选项不存在，问题索引: ${i}`);
-					continue;
-				}
 				for (let j = 0; j < res2[i].option.length; j++) {
 					if (res1[i].optionId === res2[i].option[j].optionId) {
 						list[i].answer = res2[i].option[j].optionContent
