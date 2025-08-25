@@ -153,7 +153,7 @@ const fetchStationTree = async (stationId: number) => {
 const initializeStationData = async () => {
   // 只有在用户已登录的情况下才获取站点数据
   if (!user.getToken || user.getToken === '--') {
-    console.log('用户未登录，跳过站点数据初始化')
+    router.push({ name: 'login' })
     return
   }
 
@@ -230,8 +230,8 @@ const goToProfile = () => {
 }
 
 // 跳转到部门详细页
-const goToDepartment = (departmentId: number) => {
-  router.push({ name: 'departmentDetail', params: { id: departmentId } })
+const goToDepartment = (stationId: number) => {
+  router.push({ name: 'departmentDetail', params: { stationId: stationId} })
 }
 
 const handleEditClick = () => {
@@ -254,6 +254,7 @@ const handleEditClick = () => {
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
+  z-index: 1000;
 }
 
 #logo {
@@ -267,7 +268,7 @@ const handleEditClick = () => {
   height: 100px;
   top: 0;
   left: 0;
-  z-index: 2;
+  z-index: 1000;
   width: 100%;
   border-top-left-radius: 25px;
   border-top-right-radius: 25px;

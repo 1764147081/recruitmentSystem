@@ -10,7 +10,13 @@ const routes = [
     path: '/',
     name: 'layout',
     component: () => import('../pages/Layout.vue'),
+    redirect: '/empty',
     children: [
+      {
+        path: '/empty',
+        name: 'empty',
+        component: () => import('../pages/Empty.vue')
+      },
       {
         path: '/stationIndex',
         name: 'stationIndex',
@@ -22,7 +28,7 @@ const routes = [
         component: () => import('../pages/Profile.vue')
       },
       {
-        path: '/department/:id',
+        path: '/department/:stationId',
         name: 'departmentDetail',
         component: () => import('../pages/DepartmentDetail.vue'),
         children: [
