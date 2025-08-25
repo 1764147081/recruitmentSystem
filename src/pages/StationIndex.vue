@@ -21,7 +21,7 @@
   <div class="permissionTable" v-if="hasSelected">
     <el-table :data="userInfo" style="width: 100%">
     <el-table-column prop="name" label="姓名" width="300" />
-    <el-table-column prop="depart" label="学院" width="300" />
+    <el-table-column prop="college" label="学院" width="300" />
     <el-table-column prop="username" label="学号" width="300" />
     <el-table-column label="操作" min-width="300">
       <template #default="scope">
@@ -448,7 +448,7 @@ async function deleteDepartment(){
 
 interface User {
   username: number,
-  depart: string,
+  college: string,
   name: string,
   permissionId: number,
 
@@ -478,7 +478,7 @@ async function getPermission(){
           if (userDetail.code === 200 && userDetail.data) {
             tempUsers.push({
               username: item.username,
-              depart: userDetail.data.depart || '',
+              college: userDetail.data.college || '',
               name: userDetail.data.name || '',
               permissionId:item.id
 
@@ -487,7 +487,7 @@ async function getPermission(){
             // 如果获取详情失败，至少保留用户名
             tempUsers.push({
               username: item.username,
-              depart: '无权访问',
+              college: '无权访问',
               name: '无权访问',
               permissionId:item.id
 
@@ -497,7 +497,7 @@ async function getPermission(){
           console.log(`获取用户${item.username}信息失败:`, error)
           tempUsers.push({
             username: item.username,
-            depart: '获取失败',
+            college: '获取失败',
             name: '获取失败',
             permissionId:item.id
 

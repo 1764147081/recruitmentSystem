@@ -26,7 +26,7 @@
       <div>{{form.name}}</div>
     </el-form-item>
     <el-form-item label="学院" prop="depart">
-      <div>{{form.depart}}</div>
+      <div>{{form.college}}</div>
     </el-form-item>
     <el-form-item label="学号" prop="username">
       <div>{{form.username}}</div>
@@ -63,7 +63,7 @@ import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUs
 let sort = 0
 interface User {
   username: number,
-  depart: string,
+  college: string,
   name: string,
   finishedId:number,
   qq:string,
@@ -81,7 +81,7 @@ const answerInfo=ref<Answer[]>([])
 
 const form = reactive({
   username:0,
-  depart:'',
+  college:'',
   name:'',
   qq:'',
   email:'',
@@ -93,7 +93,7 @@ const form = reactive({
 const handleClick = async (row: User) => {
   answerInfo.value=[]
   form.username=row.username
-  form.depart=row.depart
+  form.college=row.college
   form.name=row.name
   form.qq=row.qq
   form.email=row.email
@@ -165,7 +165,7 @@ async function getFinish() {
           if (userDetail.code === 200 && userDetail.data) {
             tempUsers.push({
               username: item.username,
-              depart: userDetail.data.depart || '',
+              college: userDetail.data.college || '',
               name: userDetail.data.name || '',
               finishedId:item.id,
               qq:userDetail.data.qq||'',
@@ -182,7 +182,7 @@ async function getFinish() {
             // 如果获取详情失败，至少保留用户名
             tempUsers.push({
               username: item.username,
-              depart: '无权访问',
+              college: '无权访问',
               name: '无权访问',
               finishedId:item.id,
               qq:'无权访问',
@@ -195,7 +195,7 @@ async function getFinish() {
           console.log(`获取用户${item.username}信息失败:`, error)
           tempUsers.push({
             username: item.username,
-            depart: '获取失败',
+            college: '获取失败',
             name: '获取失败',
             finishedId:item.id,
             qq:'',

@@ -5,8 +5,9 @@
     <h3 v-if="ifCreate" >{{ form.title }}</h3>
     <h4 v-if="ifCreate">开始时间：{{ form.startTime }}</h4>
     <h4 v-if="ifCreate">结束时间：{{ form.endTime }}</h4>
+    <h4 v-if="ifCreate">状态：{{ form.status==0?'未发布':'已发布' }}</h4>
     <el-button v-if="!ifCreate" @click="show = true">创建问卷</el-button>
-    <el-button v-if="ifCreate" @click="showEdit=true">添加</el-button>
+    <el-button v-if="ifCreate&&form.status==0" @click="showEdit=true">添加</el-button>
     <el-button v-if="ifCreate" @click="handleDelete">删除</el-button>
     <el-button v-if="ifCreate"  @click="show = true">编辑</el-button>
 
@@ -69,14 +70,19 @@
   </el-table-column>
   <el-table-column label="操作" min-width="300">
       <template #default="scope">
-        <el-button link type="danger" size="small" @click="handleDeleteQuestion(scope.row)">
+        <el-button link type="danger" size="small" @click="handleDeleteQuestion(scope.row)" :disabled="form.status==1">
 
           删除
         </el-button>
+        <el-button link type="primary" size="small" @click="">
+          查看
+        </el-button>
+
      </template>
     </el-table-column>
     </el-table>
-    <el-button type="primary" @click="handlePublish">发布</el-button>
+    <el-button type="primary" @click="handlePublish" :disabled="form.status==1">发布</el-button>
+
 
   </div> 
 </div>
@@ -167,8 +173,7 @@ const form=reactive({
   description:'',
   startTime:'',
   endTime:'',
-  status:0
-
+  status:0,
 })
 
 const questionnaireId=ref(0);
@@ -292,6 +297,7 @@ async function addQuestions() {
       ElMessage.success('添加成功');
       getQuestion(props.departmentId);
       showEdit.value = false;
+      showQuestionEdit.value=false;
       formdata.value={
         questionnaireId:0,
         type:0,
