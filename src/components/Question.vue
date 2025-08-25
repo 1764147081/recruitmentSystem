@@ -10,10 +10,6 @@
     <el-button v-if="ifCreate&&form.status==0" @click="showEdit=true">添加</el-button>
     <el-button v-if="ifCreate" @click="handleDelete">删除</el-button>
     <el-button v-if="ifCreate"  @click="show = true">编辑</el-button>
-
-
-
-
   </div>
 
 
@@ -70,8 +66,7 @@
   </el-table-column>
   <el-table-column label="操作" min-width="300">
       <template #default="scope">
-        <el-button link type="danger" size="small" @click="handleDeleteQuestion(scope.row)" :disabled="form.status==1">
-
+        <el-button link type="danger" size="small" @click="handleDeleteQuestion(scope.row)" :disabled="form.status==1" v-if="form.status===0">
           删除
         </el-button>
         <el-button link type="primary" size="small" @click="">
@@ -81,7 +76,7 @@
      </template>
     </el-table-column>
     </el-table>
-    <el-button type="primary" @click="handlePublish" :disabled="form.status==1">发布</el-button>
+    <el-button type="primary" @click="handlePublish" v-if="form.status==0" >发布</el-button>
 
 
   </div> 
@@ -152,10 +147,12 @@ import {ref,reactive} from 'vue'
 import { onMounted } from 'vue'
 import { watch } from 'vue';
 import {useUserStore} from '../store/user'
+import { useRouter } from 'vue-router';
 
 
 
 const userStore = useUserStore();
+const router = useRouter();
 
    
 
@@ -186,6 +183,19 @@ const editQuestionnaire=ref(false);
 
 
 
+// 组件挂载时获取数据
+onMounted(async () => {
+  if (props.departmentId) {
+    try {
+      await fetchQuestionnaire(props.departmentId);
+      await getQuestion(props.departmentId);
+    } catch (error) {
+      console.error('获取数据失败:', error);
+    }
+  }
+})
+
+// 监听departmentId变化，重新获取数据
 watch(()=>props.departmentId,(newId)=>{
   if(newId){
     fetchQuestionnaire(newId);
@@ -385,6 +395,8 @@ async function getQuestion(){
 
 
 
+
+
 async function handleCreateQuestionnaire() {
   try {
     const result = await createQuestionnaire(props.departmentId, {
@@ -444,6 +456,7 @@ async function handlePublish() {
     const result = await publishQuestionnaire(questionnaireId.value);
     if(result.code===200){
       ElMessage.success('发布成功');
+	  form.status=1;
     }else{
       ElMessage.error('发布失败');
     }
