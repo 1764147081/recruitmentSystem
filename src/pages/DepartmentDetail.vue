@@ -29,10 +29,10 @@
     </div>
       </el-tab-pane>
       <el-tab-pane label="报名管理" name="registration">
-        <p>这里是报名管理内容</p>
+        <Station :departmentId="departmentInfo.id" />
       </el-tab-pane>
       <el-tab-pane label="题库管理" name="questionBank">
-        <p>这里是题库管理内容</p>
+        <Question :departmentId="departmentInfo.id" />
       </el-tab-pane>
     </el-tabs>
     
@@ -44,9 +44,12 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { getDepartmentInfo } from '../services/user.js';
+import { getDepartmentInfo,getDepartmentIdByStationId } from '../services/user.js';
 import { ElTabs, ElTabPane } from 'element-plus';
 import {request} from '../services/1.js';
+import Station from '../components/Station.vue'
+import Question from '../components/Question.vue'
+
 
 // 获取路由参数
 const route = useRoute();
@@ -89,18 +92,23 @@ async function getQuestionnaire(){
 		url
 	})
 }
+
+
+
+
 // 组件挂载时获取部门信息
 onMounted(async() => {
   await fetchDepartmentInfo(route.params.stationId);
-  await getAdmin()
+  await getAdmin();
+
 });
 
 // 监听路由参数变化
 watch(
   () => route.params.stationId,
-  (newId) => {
-    fetchDepartmentInfo(newId);
-	getAdmin()
+  async (newId) => {
+    await fetchDepartmentInfo(newId);
+	await getAdmin();
   }
 );
 </script>
