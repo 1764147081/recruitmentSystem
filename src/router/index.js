@@ -33,11 +33,16 @@ const routes = [
         component: () => import('../pages/DepartmentDetail.vue'),
         children: [
           {
-            path: '/question',
-            name: 'question',
-            // 从pages目录进入上一级，再进入components目录
-            component: () => import('../components/Question.vue')
-          }
+        path: '/question',
+        name: 'question',
+        // 从pages目录进入上一级，再进入components目录
+        component: () => import('../components/Question.vue')
+      },
+      {
+        path: '/questionBankDetail',
+        name: 'questionBankDetail',
+        component: () => import('../pages/QuestionBankDetail.vue')
+      }
         ]
           
       }
