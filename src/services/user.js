@@ -96,9 +96,9 @@ export function unfoldStation(stationId) {
 }
 
 // 获取部门详细信息
-export function getDepartmentInfo(departmentId) {
+export function getDepartmentInfo(stationId) {
   return service({
-    url: `/department/view?stationId=${departmentId}`,
+    url: `/department/view?stationId=${stationId}`,
     method: 'get'
   }).then(res => {
     return res.data;
