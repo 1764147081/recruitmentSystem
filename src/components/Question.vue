@@ -1,5 +1,6 @@
 <template>
-<div class="showQuestionnaire" v-if="!showEdit">
+<div class="showQuestionnaire" v-if="!showEdit&&!showCheck">
+
 
   <div class="questionnaire">
     <h3 v-if="ifCreate" >{{ form.title }}</h3>
@@ -54,7 +55,8 @@
   </div>
 
 
-  <div class="questionList">
+  <div class="questionList" >
+
     <el-table :data="questionList" >
       <el-table-column prop="content" label="题目名称" width="180" />
       <el-table-column label="题目类型" width="200">
@@ -74,7 +76,9 @@
 
           删除
         </el-button>
-        <el-button link type="primary" size="small" @click="">
+        <el-button link type="primary" size="small" @click="handleCheckQuestion(scope.row);showCheck=true">
+
+
           查看
         </el-button>
 
@@ -91,7 +95,7 @@
 <div class="editQuestion" v-if="showEdit">
   <h1>填报表</h1>
 
-  <el-button @click="showEdit=false" style="margin-bottom: 10px;">返回</el-button>
+  <el-button @click="showEdit=false;formdata={}" style="margin-bottom: 10px;">返回</el-button>
   <div class="dropdown-container">
   <el-dropdown>
   <span class="el-dropdown-link">
@@ -115,24 +119,59 @@
       <el-input v-model="formdata.content" />
 
     </el-form-item>
-    <el-form-item v-if="typeData!==3" label="请输入选项" prop="options">
-      <el-input v-model="formdata.option[0].optionContent" />
-      <el-input v-model="formdata.option[1].optionContent" />
-      <el-input v-model="formdata.option[2].optionContent" />
-      <el-input v-model="formdata.option[3].optionContent" />
-    </el-form-item>
+   <el-form-item 
+  v-if="typeData!==3" 
+  label="请输入选项" 
+  v-for="(item, index) in formdata.option"
+  :key="item.optionSort"  
+  :prop="`option[${index}].optionContent`"  
+>
+  <el-input v-model="item.optionContent" />  
+  <el-button @click="removeOption(item)"> 删除选项 </el-button>  
+</el-form-item>
     <el-form-item>
       <el-button @click="addQuestions">提交</el-button>
+      <el-button @click="addOption">添加选项</el-button>
+
     </el-form-item>
 
   </el-form>
 
 </div>
+</div>
 
+<div v-if="showCheck" class="checkQuestion">
+  <h1>查看题目</h1>
+  <el-button @click="showCheck=false" style="margin-bottom: 10px;">返回</el-button>
+  <el-form :model="checkQuestion"label-width="120px" class="checkQuestionForm">
 
+    <el-form-item label="题目" prop="content">
+      <div >
+        {{checkQuestion.content}}
+      </div>
+    </el-form-item>
+   <el-form-item 
+  v-if="checkQuestion.type!==3" 
+  :label="`选项${index + 1}:`"
+  v-for="(item, index) in checkQuestion.option"
+  :key="item.optionSort"  
+  :prop="`option[${index}].optionContent`"  
+>
+  <div >
+    {{item.optionContent}}
+  </div>  
+</el-form-item>
+  </el-form>
 
 
 </div>
+
+
+
+
+
+
+
 </template>
 <script setup>
 import { createQuestionnaire,getQuestionnaireDetailedById,getQuestionnaire,publishQuestionnaire,deleteQuestionnaire,deleteQuestion } from '../services/user';
@@ -152,6 +191,7 @@ import {ref,reactive} from 'vue'
 import { onMounted } from 'vue'
 import { watch } from 'vue';
 import {useUserStore} from '../store/user'
+
 
 
 
@@ -183,6 +223,8 @@ const ifCreate = ref(false);
 const show = ref(false);
 const showEdit=ref(false);
 const editQuestionnaire=ref(false);
+const showCheck=ref(false);
+
 
 
 
@@ -192,6 +234,7 @@ watch(()=>props.departmentId,(newId)=>{
     getQuestion(newId);
     show.value=false
     showEdit.value=false;
+    showCheck.value=false;
     form.title='';
     form.description='';
     form.startTime='';
@@ -221,24 +264,33 @@ const formdata = ref({
       {
         optionContent:'',
         optionSort:0
-      },
-      {
-        optionContent:'',
-        optionSort:1
-      },
-      {
-        optionContent:'',
-        optionSort:2
-      },
-      {
-        optionContent:'',
-        optionSort:3
-
       }
 
     ]
 })
 
+const checkQuestion=ref({
+  content:'',
+  type:0,
+  option:[]
+})
+
+
+function removeOption(option) {
+  // 找到要删除的选项索引
+  const index = formdata.value.option.findIndex(item => item.optionSort === option.optionSort)
+  // 如果找到则删除
+  if (index !== -1) {
+    formdata.value.option.splice(index, 1)
+  }
+}
+
+function addOption() {
+  formdata.value.option.push({
+    optionContent: '',
+    optionSort: formdata.value.option.length
+  })
+}
 
 
 async function addQuestions() {
@@ -303,24 +355,7 @@ async function addQuestions() {
         type:0,
         content:'',
         sort:0,
-        option:[
-          {
-            optionContent:'',
-            optionSort:0
-          },
-          {
-            optionContent:'',
-            optionSort:1
-          },
-          {
-            optionContent:'',
-            optionSort:2
-          },
-          {
-            optionContent:'',
-            optionSort:3
-          }
-        ]
+        option:[]
       }
 
     }else{
@@ -444,6 +479,7 @@ async function handlePublish() {
     const result = await publishQuestionnaire(questionnaireId.value);
     if(result.code===200){
       ElMessage.success('发布成功');
+      fetchQuestionnaire(props.departmentId)
     }else{
       ElMessage.error('发布失败');
     }
@@ -523,4 +559,13 @@ try {
 
 }
 
+
+function handleCheckQuestion(row){
+  console.log(row)
+  checkQuestion.value=row;
+
+
+}
+
 </script>
+

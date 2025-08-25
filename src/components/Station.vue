@@ -1,27 +1,34 @@
 <template>
-  <el-table :data="userInfo" style="width: 100%" v-if="!show">
+  <el-table :data="userInfo" style="width: 100%" v-if="showAnswer==false&&showProfile==false">
+
     <el-table-column prop="name" label="姓名" width="300" />
     <el-table-column prop="depart" label="学院" width="300" />
     <el-table-column prop="username" label="学号" width="300" />
     <el-table-column  label="操作" min-width="300">
       <template #default="scope">
-        <el-button link size="small" @click="handleClick(scope.row)">
-          查看
+        <el-button link size="small" @click="handleClick(scope.row);showAnswer=true">
+          查看问卷
         </el-button>
+        <el-button link size="small" @click="handleClick(scope.row);showProfile=true">
+          查看个人信息
+        </el-button>
+
      </template>
     </el-table-column>
   </el-table>
 
 
-  <div class="answerInfo" v-if="show">
-    <el-button type="danger" @click="show=false">关闭</el-button>
+  <div class="answerInfo" v-if="showAnswer">
+    <el-button type="danger" @click="showAnswer=false">关闭</el-button>
+
     <div v-for="item in answerInfo" :key="item.content">
       <div class="question">问题:{{item.content}}</div>
       <div class="answer">回答:{{item.answer}}</div>
     </div>  
   </div>
   
-  <el-form :model="form" ref="formRef" label-width="100px" class="demo-ruleForm" v-if="show">
+  <el-form :model="form" ref="formRef" label-width="100px" class="demo-ruleForm" v-if="showProfile">
+    <el-button type="danger" @click="showProfile=false">关闭</el-button>
     <el-form-item label="姓名" prop="name">
       <div>{{form.name}}</div>
     </el-form-item>
@@ -48,7 +55,8 @@
 
 <script lang="ts" setup>
 
-const show = ref(false)
+const showAnswer = ref(false)
+const showProfile = ref(false)
 
 const props = defineProps({
   departmentId: {
@@ -101,7 +109,6 @@ const handleClick = async (row: User) => {
   form.major=row.major
 
   console.log('点击查看:', row.finishedId)
-  show.value=true
   const list:Answer[]=[] 
   const res1=await getAnswer(row)
   const res2=await getQuestion()
