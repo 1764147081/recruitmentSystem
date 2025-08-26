@@ -62,7 +62,7 @@ const props = defineProps({
   departmentId: {
     type: Number,
     required: true
-  }
+  },
 })
 
 import { reactive, ref, watch } from 'vue'
