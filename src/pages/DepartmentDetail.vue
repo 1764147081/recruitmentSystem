@@ -39,11 +39,11 @@
 					</div>
 				</div>
 			</el-tab-pane>
-			<el-tab-pane label="报名管理" name="registration">
-				<Station v-if="activeTab === 'registration'" :departmentId="departmentInfo.id" />
+			<el-tab-pane label="报名管理" >
+				<Station  :departmentId="departmentInfo.id"/>
 			</el-tab-pane>
-			<el-tab-pane label="题库管理" name="questionBank">
-				<Question v-if="activeTab === 'questionBank'" :departmentId="departmentInfo.id || 0" />
+			<el-tab-pane label="题库管理" >
+				<Question :departmentId="departmentInfo.id"/>
 			</el-tab-pane>
 		</el-tabs>
 
@@ -68,10 +68,7 @@
 	import {
 		ElTabs,
 		ElTabPane
-	} from 'element-plus';
-	import {
-		request
-	} from '../services/1.js';
+	} from 'element-plus'
 	import Station from '../components/Station.vue'
 	import Question from '../components/Question.vue'
 
@@ -112,65 +109,7 @@
 		}
 	};
 
-	async function getAdmin() {
-		// 确保stationId有效后再发送请求
-		if (!departmentInfo.value.stationId) {
-			console.warn('stationId is not available yet');
-			return;
-		}
-		try {
-			const res = await request({
-				url: `/permission/show/station?stationId=${departmentInfo.value.stationId}`,
-			});
-			// 处理响应数据
-			if (res && res.data) {
-				departmentInfo.value.administrators = res.data;
-				await getEndingAdmin()
-			} else if (res) {
-				// 如果res存在但res.data不存在，直接使用res
-				departmentInfo.value.administrators = res;
-			} else {
-				console.warn('管理员信息响应数据为空');
-			}
-		} catch (error) {
-			console.error('获取管理员信息失败:', error);
-		}
-	}
-
-	async function getQuestionnaire() {
-		// 确保departmentId有效后再发送请求
-		if (!departmentInfo.value.id) {
-			console.warn('departmentId is not available yet');
-			return;
-		}
-		try {
-			const res = await request({
-				url: `/department/view/questionnaire?departmentId=${departmentInfo.value.id}`
-			});
-			if (res && res.data) {
-				departmentInfo.value.totalRegistrations = res.data.collected || 0;
-			} else if (res) {
-				departmentInfo.value.totalRegistrations = res.collected || 0;
-			} else {
-				console.warn('问卷信息响应数据为空');
-			}
-		} catch (error) {
-			console.error('获取问卷信息失败:', error);
-		}
-	}
-	async function getUserInfo(username) {
-		const res = await request({
-			url: `/user/info?username=${username}`
-		})
-		return res.data
-	}
-	async function getEndingAdmin() {
-		departmentInfo.value.endAdmin = await Promise.all(departmentInfo.value.administrators.map(async (val) => {
-			let a = await getUserInfo(val.username);
-			return a;
-		}));
-	}
-
+	
 
 
 
