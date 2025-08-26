@@ -1,10 +1,6 @@
 export const baseUrl = "https://i.sdu.edu.cn/XSZX/NXXT/api";
 const token = localStorage.getItem('token')
-if(!token){
-	token = sessionStorage.getItem('token')
-}
 export function request(params = {}) {
-
 	let {
 		url,
 		method = 'GET',
@@ -51,7 +47,6 @@ export function request(params = {}) {
 			}
 		})
 		.then((data)=>{
-			return data;
 			console.log(data);
 		})
 
