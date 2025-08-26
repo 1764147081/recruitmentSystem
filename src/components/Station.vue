@@ -3,7 +3,6 @@
 
     <el-table-column prop="name" label="姓名" width="300" />
     <el-table-column prop="college" label="学院" width="300" />
-
     <el-table-column prop="username" label="学号" width="300" />
     <el-table-column  label="操作" min-width="300">
       <template #default="scope">
