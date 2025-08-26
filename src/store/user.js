@@ -78,7 +78,7 @@ export const useUserStore = defineStore('user', {
             userInfo: {
                 username: '',
                 gender: '',
-                college: '',
+                depart: '',
                 major: '',
                 name: '',
                 email: '',
