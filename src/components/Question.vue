@@ -1,5 +1,28 @@
 <template>
 <div class="showQuestionnaire" v-if="!showEdit">
+  <!-- 题目详情弹窗 -->
+  <el-dialog v-model="dialogVisible" title="题目详情" :width="800">
+    <el-card v-if="currentQuestion" class="question-card">
+      <div slot="header" class="clearfix">
+        <h2>{{ currentQuestion.content }}</h2>
+      </div>
+      <div class="question-info">
+        <p><strong>题目类型：</strong>{{ getQuestionTypeName(currentQuestion.type) }}</p>
+        <div v-if="currentQuestion.option && currentQuestion.option.length > 0">
+          <p><strong>选项：</strong></p>
+          <ul class="options-list">
+            <li v-for="(option, index) in currentQuestion.option" :key="index">
+              {{ String.fromCharCode(65 + index) }}: {{ option.optionContent }}
+            </li>
+          </ul>
+        </div>
+        <div v-else-if="currentQuestion.type === 3">
+          <p><strong>题型说明：</strong>简答题</p>
+        </div>
+      </div>
+    </el-card>
+    <el-empty v-else description="加载中..."></el-empty>
+  </el-dialog>
 
   <div class="questionnaire">
     <h3 v-if="ifCreate" >{{ form.title }}</h3>
@@ -69,9 +92,9 @@
         <el-button link type="danger" size="small" @click="handleDeleteQuestion(scope.row)" :disabled="form.status==1" v-if="form.status===0">
           删除
         </el-button>
-        <el-button link type="primary" size="small" @click="">
-          查看
-        </el-button>
+        <el-button link type="primary" size="small" @click="handleViewQuestion(scope.row)">
+  查看
+</el-button>
 
      </template>
     </el-table-column>
@@ -90,16 +113,17 @@
   <div class="dropdown-container">
   <el-dropdown>
   <span class="el-dropdown-link">
-    请选择题目类型
-    <el-icon class="el-icon--right">
-      <ArrowDown />
-    </el-icon>
-  </span>
+<el-icon style="margin-right: 5px;"><Menu /></el-icon>{{ selectedTypeName || '请选择题目类型' }}
+<el-icon class="el-icon--right">
+  <ArrowDown />
+</el-icon>
+</span>
   <template #dropdown>
   <el-dropdown-menu>
-    <el-dropdown-item @click="typeData = 3;showQuestionEdit=true">简答题</el-dropdown-item>
-    <el-dropdown-item @click="typeData = 1;showQuestionEdit=true">单选题</el-dropdown-item>
-    <el-dropdown-item @click="typeData = 2;showQuestionEdit=true">多选题</el-dropdown-item>
+    <el-dropdown-item @click="typeData = 3;showQuestionEdit=true;initOptions()">简答题</el-dropdown-item>
+
+    <el-dropdown-item @click="typeData = 1;showQuestionEdit=true;initOptions()">单选题</el-dropdown-item>
+      <el-dropdown-item @click="typeData = 2;showQuestionEdit=true;initOptions()">多选题</el-dropdown-item>
   </el-dropdown-menu>
   </template>
   </el-dropdown>
@@ -111,10 +135,15 @@
 
     </el-form-item>
     <el-form-item v-if="typeData!==3" label="请输入选项" prop="options">
-      <el-input v-model="formdata.option[0].optionContent" />
-      <el-input v-model="formdata.option[1].optionContent" />
-      <el-input v-model="formdata.option[2].optionContent" />
-      <el-input v-model="formdata.option[3].optionContent" />
+      <div v-for="(option, index) in formdata.option" :key="index" class="option-item">
+        <el-input v-model="option.optionContent" placeholder="请输入选项内容" />
+        <el-button type="danger" size="small" @click="removeOption(index)" v-if="formdata.option.length > 1">
+          <el-icon><Delete /></el-icon> 删除
+        </el-button>
+      </div>
+      <el-button type="primary" size="small" @click="addOption">
+          <el-icon><Plus /></el-icon> 添加选项
+        </el-button>
     </el-form-item>
     <el-form-item>
       <el-button @click="addQuestions">提交</el-button>
@@ -131,6 +160,8 @@
 </template>
 <script setup>
 import { createQuestionnaire,getQuestionnaireDetailedById,getQuestionnaire,publishQuestionnaire,deleteQuestionnaire,deleteQuestion } from '../services/user';
+import { ElDialog, ElCard, ElEmpty } from 'element-plus';
+import { Delete, Plus } from '@element-plus/icons-vue';
 import { 
   ElMessage, 
   ElMessageBox,
@@ -143,7 +174,7 @@ import {
   ElIcon            
 } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
-import {ref,reactive} from 'vue'
+import {ref,reactive, computed} from 'vue'
 import { onMounted } from 'vue'
 import { watch } from 'vue';
 import {useUserStore} from '../store/user'
@@ -222,6 +253,64 @@ const questionList = ref([
 
 //编辑题目
 const typeData=ref(0)
+
+// 计算属性：获取选中的题目类型名称
+const selectedTypeName = computed(() => {
+  switch(typeData.value) {
+    case 1: return '单选题';
+    case 2: return '多选题';
+    case 3: return '简答题';
+    default: return '';
+  }
+})
+// 弹窗控制
+const dialogVisible = ref(false);
+const currentQuestion = ref(null);
+
+// 获取题目类型名称
+const getQuestionTypeName = (type) => {
+  switch(type) {
+    case 1: return '单选题';
+    case 2: return '多选题';
+    case 3: return '简答题';
+    default: return '未知类型';
+  }
+};
+
+// 查看题目详情
+const handleViewQuestion = async (row) => {
+  try {
+    dialogVisible.value = true;
+    currentQuestion.value = row;
+  } catch (error) {
+    console.error('查看题目详情失败:', error);
+    ElMessage.error('加载题目失败，请重试');
+  }
+};
+
+// 初始化选项数组
+const initOptions = () => {
+  formdata.value.option = [{ optionContent: '', optionSort: 0 }];
+};
+
+// 添加选项
+const addOption = () => {
+  const newIndex = formdata.value.option.length;
+  formdata.value.option.push({
+    optionContent: '',
+    optionSort: newIndex
+  });
+};
+
+// 删除选项
+const removeOption = (index) => {
+  formdata.value.option.splice(index, 1);
+  // 更新剩余选项的排序
+  formdata.value.option.forEach((opt, i) => {
+    opt.optionSort = i;
+  });
+};
+
 const formdata = ref({
     questionnaireId:0,
     type:0,
@@ -346,7 +435,7 @@ async function addQuestions() {
 
 
 //获取问卷列表
-async function  fetchQuestionnaire() {
+async function fetchQuestionnaire() {
   try {
     const result = await getQuestionnaire(props.departmentId);
     if(result.code===200){
@@ -358,7 +447,6 @@ async function  fetchQuestionnaire() {
         form.endTime=result.data.endTime;
         form.status=result.data.status;
         questionnaireId.value=result.data.id;
-        console.log(questionnaireId.value)
     }
   } catch (error) {
     console.error("发生错误:", error);
@@ -376,7 +464,6 @@ async function getQuestion(){
         sort.value=0
       }else{
         sort.value=result.data.questions.length;
-        console.log(result.data.questions.length)
         return result.data.questions
       }
 
@@ -537,3 +624,80 @@ try {
 }
 
 </script>
+
+<style scoped>
+.question-card {
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.options-list {
+  list-style: none;
+  padding: 0;
+}
+
+.options-list li {
+  margin: 8px 0;
+  padding: 10px 16px;
+  border-radius: 4px;
+  background-color: #f5f5f5;
+  transition: background-color 0.2s;
+}
+
+.options-list li:hover {
+  background-color: #e9e9e9;
+}
+
+.question-info {
+  line-height: 1.8;
+}
+
+.clearfix {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 15px;
+  background-color: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.option-item:hover {
+  border-color: #409eff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.option-item .el-input {
+  flex: 1;
+}
+
+/* 美化按钮样式 */
+.form-actions .el-button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* 优化下拉菜单样式 */
+.dropdown-container .el-dropdown-link {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: 1px solid #dcdfe6;
+  background-color: #fff;
+  transition: all 0.2s;
+}
+
+.dropdown-container .el-dropdown-link:hover {
+  border-color: #409eff;
+  color: #409eff;
+}
+
+</style>

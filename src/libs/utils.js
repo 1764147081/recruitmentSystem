@@ -28,7 +28,7 @@ function generateRouter(userRouters) {
     let routes = {
         path: r.path,
         name: r.name,
-        component: () => import(`@/views/${r.component}.vue`),
+        component: () => import(`@/pages/${r.component}.vue`),
 
     }
     if (r.children) { 

@@ -14,19 +14,20 @@
 
 
 			</el-header>
-			<el-container>
+			<el-container v-model:activeIndex="activeStationId" class="el-menu-vertical-demo"
+								:router="false" @select="onMenuSelect">
 				<el-aside>
 					<el-row class="tac">
 						<el-col :span="24">
 							<h3 class="edit" @click="handleEditClick">我的管理</h3>
-							<el-menu default-active="2" class="el-menu-vertical-demo">
+							<el-menu class="el-menu-vertical-demo" :router="false">
 								<el-sub-menu index="1">
 									<template #title>
 										<span>组织目录</span>
 									</template>
 									<template v-for="station in stationTree" :key="station.id">
 										<el-menu-item v-if="station.isDepartment === 1" :index="station.id.toString()"
-											:class="{ 'department-node': true, }" @click="goToDepartment(station.id)">
+											:class="{ 'department-node': true }" @click="goToDepartment(station.id,station.permitted)">
 											{{ station.name }}
 										</el-menu-item>
 										<el-sub-menu v-else :index="station.id.toString()">
@@ -34,8 +35,8 @@
 											<!-- 递归渲染子站点 -->
 											<template v-for="child in station.children" :key="child.id">
 												<el-menu-item v-if="child.isDepartment === 1"
-													:index="child.id.toString()" :class="{ 'department-node': true,  }"
-													@click="goToDepartment(child.id)">
+													:index="child.id.toString()" :class="{ 'department-node': true }"
+													@click="goToDepartment(child.id,child.permitted)">
 													{{ child.name }}
 												</el-menu-item>
 												<el-sub-menu v-else :index="child.id.toString()">
@@ -44,8 +45,8 @@
 													<template v-for="grandchild in child.children" :key="grandchild.id">
 														<el-menu-item v-if="grandchild.isDepartment === 1"
 															:index="grandchild.id.toString()"
-															:class="{ 'department-node': true, }"
-															@click="goToDepartment(grandchild.id)">
+															:class="{ 'department-node': true }"
+															@click="goToDepartment(grandchild.id,grandchild.permitted)">
 															{{ grandchild.name }}
 														</el-menu-item>
 														<el-sub-menu v-else :index="grandchild.id.toString()">
@@ -88,11 +89,11 @@
 	import { useStationStore } from '../store/station'
 
 	import { getUserInfo, getQuestionnaireStatus, unfoldStation } from '../services/user'
-	import { ref, onBeforeMount, reactive, h } from 'vue'
+	import { ref, onBeforeMount, reactive, h, computed } from 'vue'
 	import { request } from '@/services/1.js'
 
 	const baseURL = "https://i.sdu.edu.cn/XSZX/NXXT/api"
-
+	const onMenuSelect = () => false
 	const router = useRouter()
 	const route = useRoute()
 	const user = useUserStore()
@@ -106,12 +107,15 @@
 	})
 	const permission = ref([{}])
 
-
+const activeStationId = computed(() =>
+  route.fullPath.match(/\/department\/(\d+)/)?.[1] ?? ''
+)
 	// 站点树数据
 	interface Station {
 		id : number
 		name : string
 		isDepartment : number
+		permitted : boolean
 		children ?: Station[]
 	}
 
@@ -129,22 +133,15 @@
 	// 获取站点树
 	const fetchStationTree = async (stationId : number) => {
 		try {
-			console.log('正在获取站点ID为', stationId, '的站点树')
 			const res = await unfoldStation(stationId)
-			console.log('获取站点树响应:', res)
 			if (res && res.data) {
 				// 递归处理子站点
 				const processChildren = async (items : Station[]) => {
 					for (let item of items) {
-						console.log('处理站点:', item)
-
 						// 如果不是部门，则继续获取子站点
 						if (item.isDepartment !== 1) {
-							console.log('站点', item.id, '不是部门，继续获取子站点')
-
 							try {
 								const childRes = await unfoldStation(item.id)
-								console.log('获取子站点响应:', childRes)
 								if (childRes && childRes.data) {
 									item.children = childRes.data
 									if (item.children) {
@@ -231,7 +228,7 @@
 	onBeforeMount(async () => {
 		await initializeUserState();
 		await initializeStationData();
-		await getPermission()
+		// await getPermission()
 	})
 
 	// 跳转到个人信息页面
@@ -241,9 +238,8 @@
 
 
 	// 跳转到部门详细页
-	const goToDepartment = (stationId : number) => {
-		const exist = permission.value.some(val => val.stationId === stationId)
-		if (exist) (
+	const goToDepartment = (stationId : number,permitted: boolean) => {
+		if (permitted) (
 			router.push({ name: 'departmentDetail', params: { stationId: stationId } }))
 		else {
 			ElMessage.info('您没有对应的权限,无法访问')
@@ -291,10 +287,15 @@
 	}
 
 	.el-aside {
-		position: fixed;
-		top: 100px;
-		left: 0;
-		width: 200px;
+	position: fixed;
+	top: 100px;
+	left: 0;
+	width: 200px;
+}
+
+.el-main {
+	margin-left: 200px;
+	padding-top: 100px;
 		height: calc(100% - 100px);
 		padding-top: 20px;
 		background: #fff;
@@ -368,34 +369,29 @@
 		border-radius: 0px;
 	}
 
-	.el-menu-vertical-demo .el-sub-menu.is-active .el-sub-menu__title,
-	.el-menu-vertical-demo .el-menu-item.is-active {
-		color: #1890ff;
-		background-color: #e6f7ff;
-		border-radius: 0px;
-	}
-
 	/* 站点树标题样式 */
-	.el-sub-menu .el-sub-menu__title {
-		font-weight: 500;
-	}
+.el-sub-menu .el-sub-menu__title {
+  font-weight: 500;
+}
 
-	/* 部门节点特殊样式 */
-	.el-menu-vertical-demo .department-node {
-		background-color: #f0f8ff;
-		color: #1890ff;
-		font-weight: 500;
-		border-left: 3px solid #1890ff;
-	}
+/* 部门节点特殊样式 */
+.el-menu-vertical-demo .department-node {
+  background-color: #f0f8ff;
+  color: #1890ff;
+  font-weight: 500;
+  border-left: 3px solid #1890ff;
+}
 
-	.el-menu-vertical-demo .department-node:hover {
-		background-color: #e6f7ff;
-	}
+.el-menu-vertical-demo .department-node:hover {
+  background-color: #e6f7ff;
+}
 
-	.el-menu-vertical-demo .department-node.is-active {
-		background-color: #1890ff;
-		color: white;
-		border-left: 3px solid #0056b3;
-		font-weight: bold;
-	}
+/* 已移除激活状态样式 */
+/* .el-menu-vertical-demo .el-menu-item.is-active,
+.el-menu-vertical-demo .department-node.is-active {
+  background-color: #1890ff;
+  color: white;
+  border-left: 3px solid #0056b3;
+  font-weight: bold;
+} */
 </style>

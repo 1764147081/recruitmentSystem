@@ -21,7 +21,7 @@
   <div class="permissionTable" v-if="hasSelected">
     <el-table :data="userInfo" style="width: 100%">
     <el-table-column prop="name" label="姓名" width="300" />
-    <el-table-column prop="college" label="学院" width="300" />
+    <el-table-column prop="depart" label="学院" width="300" />
     <el-table-column prop="username" label="学号" width="300" />
     <el-table-column label="操作" min-width="300">
       <template #default="scope">
@@ -165,11 +165,11 @@ import { Station } from '../store/station'
 import { ElMessage,  ElForm, ElFormItem, ElInput, ElButton, ElMessageBox } from 'element-plus'
 import RecursiveMenu from '../components/RecursiveMenu.vue'
 import { getStationView } from '../store/stationTree'
-import { onMounted } from 'vue'
-import { stat } from 'fs'
 import { getUserInfoByUsername ,getDepartmentInfo,getStationInfo} from '@/services/user'
+import { el } from 'element-plus/es/locales.mjs'
 
-import constants from 'constants'
+
+
 
 const BaseUrl='https://i.sdu.edu.cn/XSZX/NXXT/api'
 const user = useUserStore()
@@ -246,6 +246,8 @@ const editForm = reactive({
 const stationStore:Station[] = []
 const stationMap = ref(stationStore)
 
+const uploadImg=ref(null)
+
 
 
 // 图片上传处理
@@ -254,8 +256,7 @@ function handleFileChange(file: any) {
     ElMessage.error('只能上传图片文件！');
     return false;
   }
-  formData.image = URL.createObjectURL(file.raw);
-  console.log(formData.image)
+  formData.image = URL.createObjectURL(file.raw)
   station.changeImg(formData.image)
 
 }
@@ -263,10 +264,13 @@ function handleFileChange(file: any) {
 function handleEditFileChange(file: any) {
   if (!file.raw.type.startsWith('image/')) {
     ElMessage.error('只能上传图片文件！');
+    uploadImg.value = null;
     return false;
   }
+  uploadImg.value = file.raw; 
   editForm.image = URL.createObjectURL(file.raw);
   console.log(editForm.image)
+   console.log('当前上传的文件:', uploadImg.value);
 }
 
 
@@ -448,7 +452,7 @@ async function deleteDepartment(){
 
 interface User {
   username: number,
-  college: string,
+  depart: string,
   name: string,
   permissionId: number,
 
@@ -478,7 +482,7 @@ async function getPermission(){
           if (userDetail.code === 200 && userDetail.data) {
             tempUsers.push({
               username: item.username,
-              college: userDetail.data.college || '',
+              depart: userDetail.data.depart || '',
               name: userDetail.data.name || '',
               permissionId:item.id
 
@@ -487,7 +491,7 @@ async function getPermission(){
             // 如果获取详情失败，至少保留用户名
             tempUsers.push({
               username: item.username,
-              college: '无权访问',
+              depart: '无权访问',
               name: '无权访问',
               permissionId:item.id
 
@@ -497,7 +501,7 @@ async function getPermission(){
           console.log(`获取用户${item.username}信息失败:`, error)
           tempUsers.push({
             username: item.username,
-            college: '获取失败',
+            depart: '获取失败',
             name: '获取失败',
             permissionId:item.id
 
@@ -625,12 +629,13 @@ async function edit(){
         pId: station.getParentId,
         name: editForm.name,
         description: editForm.description,
+        isDepartment:station.getIsDepartment
       })
     })
     let data = await response.json()
     if(data.code == 200) {
       ElMessage.success("编辑成功")
-      getPermission()
+      refreshMenu();
       console.log(data)
     }else{
       ElMessage.error("编辑失败")
@@ -651,20 +656,47 @@ async function edit(){
         'Authorization': `Bearer ${user.getToken}`
       },
       body: JSON.stringify({
+        id:editForm.id,
         pId: station.getParentId,
         name: editForm.name,
         description: editForm.description,
         image:editForm.image,
         stationId:station.getId,
+        isDepartment:station.getIsDepartment
       })
     })
     let data = await response.json()
     if(data.code == 200) {
-      ElMessage.success("编辑成功")
-      getPermission()
+      if(uploadImg.value!==null) {
+        const imgData = new FormData()
+        imgData.append('file', uploadImg.value)
+        try{
+          const imgResponse = await fetch(`${BaseUrl}/department/img?id=${editForm.id}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${user.getToken}`
+            },
+            body: imgData
+          })
+          let imgDataRes = await imgResponse.json()
+          if(imgDataRes.code == 200) {
+            ElMessage.success("编辑成功")
+            refreshMenu();
+          }else{
+            ElMessage.error("上传图片失败")
+            console.log(imgDataRes)
+          }
+        }catch(error){
+          ElMessage.error("信息编辑成功但上传图片失败")
+        }
+      }else{
+        ElMessage.success("编辑成功")
+      }
       console.log(data)
     }else{
       ElMessage.error("编辑失败")
+      console.log('Request failed:', data);
+
     }
   }catch(error){
     console.error('Request failed:', error);

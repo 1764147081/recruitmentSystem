@@ -7,9 +7,8 @@
 		<el-table-column prop="email" label="邮箱" width="200" />
 		<el-table-column label="操作" min-width="300">
 			<template #default="scope">
-				<el-button link size="small" @click="handleClick(scope.row)">
-					查看
-				</el-button>
+				<el-button link size="small" @click="handleClick(scope.row)">查看问卷</el-button>
+<el-button link size="small" @click="viewUserInfo(scope.row)">查看个人信息</el-button>
 			</template>
 		</el-table-column>
 	</el-table>
@@ -17,39 +16,58 @@
 
 	<div class="answerInfo" v-if="show">
 		<el-button type="danger" @click="show=false">关闭</el-button>
-		<div v-for="item in answerInfo" :key="item.content">
-			<div class="question">问题:{{item.content}}</div>
-			<div class="answer">回答:{{item.answer}}</div>
-		</div>
+		<el-card v-for="item in answerInfo" :key="item.content" class="question-card" shadow="hover">
+  <div class="question-header">
+    <span class="question-icon"><el-icon><Document /></el-icon></span>
+    <div class="question-content">{{item.content}}</div>
+  </div>
+  <el-divider></el-divider>
+  <div class="answer-list">
+    <div class="answer-item" v-for="(a, index) in item.answer" :key="index">
+      <span class="answer-text">{{a}}</span>
+    </div>
+  </div>
+</el-card>
 	</div>
 
-	<el-form :model="form" ref="formRef" label-width="100px" class="demo-ruleForm" v-if="show">
-		<el-form-item label="姓名" prop="name">
-			<div>{{form.name}}</div>
-		</el-form-item>
-		<el-form-item label="学院" prop="college">
-			<div>{{form.college}}</div>
-		</el-form-item>
-		<el-form-item label="学号" prop="username">
-			<div>{{form.username}}</div>
-		</el-form-item>
-		<el-form-item label="qq" prop="qq">
-			<div>{{form.qq}}</div>
-		</el-form-item>
-		<el-form-item label="邮箱" prop="email">
-			<div>{{form.email}}</div>
-		</el-form-item>
-		<el-form-item label="个人介绍" prop="profile">
-			<div>{{form.profile}}</div>
-		</el-form-item>
-	</el-form>
-
-
+<el-dialog title="个人信息" v-model="showUserInfo" width="50%">
+  <el-form :model="currentUserInfo" label-width="120px">
+  <div style="text-align: center; margin-bottom: 20px;">
+    <el-avatar :src="currentUserInfo.avatar" size="large">
+      <span v-if="!currentUserInfo.avatar">{{ currentUserInfo.name?.charAt(0) || 'U' }}</span>
+    </el-avatar>
+  </div>
+    <el-form-item label="姓名">
+      <span>{{ currentUserInfo.name }}</span>
+    </el-form-item>
+    <el-form-item label="学院">
+      <span>{{ currentUserInfo.college }}</span>
+    </el-form-item>
+    <el-form-item label="学号">
+      <span>{{ currentUserInfo.username }}</span>
+    </el-form-item>
+    <el-form-item label="QQ">
+      <span>{{ currentUserInfo.qq }}</span>
+    </el-form-item>
+    <el-form-item label="邮箱">
+      <span>{{ currentUserInfo.email }}</span>
+    </el-form-item>
+    <el-form-item label="专业">
+      <span>{{ currentUserInfo.major }}</span>
+    </el-form-item>
+    <el-form-item label="个人介绍">
+      <span>{{ currentUserInfo.profile }}</span>
+    </el-form-item>
+  </el-form>
+</el-dialog>
 
 </template>
 
 <script lang="ts" setup>
+import { Document, Avatar } from '@element-plus/icons-vue';
 	const show = ref(false)
+const showUserInfo = ref(false)
+const currentUserInfo = ref({})
 
 	const props = defineProps({
 		departmentId: {
@@ -75,10 +93,22 @@
 
 	interface Answer {
 		content : string,
-		answer : string
+		answer : string[]
 
 	}
 	const answerInfo = ref<Answer[]>([])
+
+const viewUserInfo = async (row) => {
+  try {
+    const res = await getUserInfoByUsername(row.username);
+if (res.code === 200) {
+  currentUserInfo.value = res.data;
+  showUserInfo.value = true;
+}
+  } catch (error) {
+    console.error('获取用户信息失败:', error);
+  }
+}
 
 	const form = reactive({
 		username: 0,
@@ -100,30 +130,52 @@
 		form.email = row.email
 		form.profile = row.profile
 		form.major = row.major
-
-		console.log('点击查看:', row.finishedId)
 		show.value = true
 		const list : Answer[] = []
 		const res1 = await getAnswer(row)
 		const res2 = await getQuestion()
-		for (let i = 0; i < res1.length; i++) {
+		console.log(res1,res2);
+		// for (let i = 0; i < res1.length; i++) {
+		// 	list.push({
+		// 		content: res2[i].content,
+		// 		answer: ''
+		// 	})
+		// 	if (res1[i].optionId !== null) {
+		// 		for (let j = 0; j < res2[i].option.length; j++) {
+		// 			if (res1[i].optionId === res2[i].option[j].optionId) {
+		// 				list[i].answer = res2[i].option[j].optionContent
+		// 			}
+		// 		}
+		// 	} else {
+		// 		list[i].answer = res1[i].answerContent
+		// 	}
+
+		// }
+		for(let i = 0; i < res2.length; i++){
 			list.push({
-				content: res2[i].content,
-				answer: ''
-			})
-			if (res1[i].optionId !== null) {
-				for (let j = 0; j < res2[i].option.length; j++) {
-					if (res1[i].optionId === res2[i].option[j].optionId) {
-						list[i].answer = res2[i].option[j].optionContent
+					content: res2[i].content,
+					answer: []
+				})
+				if(res2[i].type===1||res2[i].type===2)
+				for(let j = 0;j < res1.length;j++){
+					for(let k =0;k<res2[i].option.length;k++){
+						if(res2[i].option[k].optionId===res1[j].optionId){
+							list[i].answer.push(res2[i].option[k].optionContent)
+						}
 					}
 				}
-			} else {
-				list[i].answer = res1[i].answerContent
-			}
-
+				else{
+					for(let j = 0;j < res1.length;j++){
+					if(res2[i].id===res1[j].questionId){
+						list[i].answer.push(res1[j].answerContent)
+					}
+					}
+				}
 		}
+		
 		answerInfo.value = list
-		console.log(answerInfo.value)
+		console.log(list);
+		console.log('111111',answerInfo.value)
 	}
 
 	const userInfo = ref<User[]>([])
@@ -281,19 +333,55 @@
 		gap: 20px;
 	}
 
-	.answer-card {
-		border: 1px solid #f0f0f0;
-		border-radius: 8px;
-		padding: 16px;
-		transition: all 0.3s ease;
-		background-color: #fafafa;
-	}
+	.question-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+}
 
-	.answer-card:hover {
-		border-color: #e0e0e0;
-		background-color: #fff;
-		transform: translateX(4px);
-	}
+.question-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.question-icon {
+  margin-right: 10px;
+  color: #409EFF;
+}
+
+.question-content {
+  font-size: 16px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.answer-list {
+  padding: 10px 0;
+}
+
+.answer-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.answer-item:hover {
+  background-color: #eef1f5;
+  transform: translateX(5px);
+}
+
+.answer-tag {
+  margin-right: 10px;
+}
+
+.answer-text {
+  line-height: 1.6;
+}
 
 	.question-section,
 	.answer-section {

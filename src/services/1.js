@@ -1,5 +1,5 @@
 export const baseUrl = "https://i.sdu.edu.cn/XSZX/NXXT/api";
-const token = localStorage.getItem('token')
+let token = localStorage.getItem('token')
 if(!token){
 	token = sessionStorage.getItem('token')
 }
