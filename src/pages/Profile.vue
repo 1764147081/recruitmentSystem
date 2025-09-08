@@ -12,7 +12,7 @@
           <el-row :gutter="20">
             <el-col :span="8">
               <div class="profile-avatar">
-                <el-avatar :size="100" :src="userInfo.avatar || " />
+                <el-avatar :size="100" :src="userInfo.avatar" />
                 <div class="avatar-upload" v-if="!isEditing">
                   <el-button size="small" @click="handleAvatarUpload">修改头像</el-button>
                   <input type="file" ref="avatarInputRef" style="display: none" @change="onAvatarChange" accept="image/*" />
