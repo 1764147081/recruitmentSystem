@@ -12,61 +12,64 @@
 					<span class="user-name">{{ userInfo.name }}</span>
 				</div>
 			</el-header>
-			
-			<el-container v-model:activeIndex="activeStationId" class="el-menu-vertical-demo"
-								:router="false" @select="onMenuSelect">
-				<el-aside>
-					<el-row class="tac">
-						<el-col :span="24">
-							<h3 class="edit" @click="handleEditClick">我的管理</h3>
-							<el-menu class="el-menu-vertical-demo" :router="false">
-								<el-sub-menu index="1">
-									<template #title>
-										<span>组织目录</span>
-									</template>
-									<template v-for="station in stationTree" :key="station.id">
-										<el-menu-item v-if="station.isDepartment === 1" :index="station.id.toString()"
-											:class="{ 'department-node': true }" @click="goToDepartment(station.id,station.permitted)">
-											{{ station.name }}
-										</el-menu-item>
-										<el-sub-menu v-else :index="station.id.toString()">
-											<template #title>{{ station.name }}</template>
-											<!-- 递归渲染子站点 -->
-											<template v-for="child in station.children" :key="child.id">
-												<el-menu-item v-if="child.isDepartment === 1"
-													:index="child.id.toString()" :class="{ 'department-node': true }"
-													@click="goToDepartment(child.id,child.permitted)">
-													{{ child.name }}
-												</el-menu-item>
-												<el-sub-menu v-else :index="child.id.toString()">
-													<template #title>{{ child.name }}</template>
-													<!-- 继续递归渲染子站点 -->
-													<template v-for="grandchild in child.children" :key="grandchild.id">
-														<el-menu-item v-if="grandchild.isDepartment === 1"
-															:index="grandchild.id.toString()"
-															:class="{ 'department-node': true }"
-															@click="goToDepartment(grandchild.id,grandchild.permitted)">
-															{{ grandchild.name }}
-														</el-menu-item>
-														<el-sub-menu v-else :index="grandchild.id.toString()">
-															<template #title>{{ grandchild.name }}</template>
-															<!-- 可以继续添加更多层级 -->
-														</el-sub-menu>
-													</template>
-												</el-sub-menu>
-											</template>
-										</el-sub-menu>
-									</template>
-								</el-sub-menu>
-							</el-menu>
-						</el-col>
-					</el-row>
-				</el-aside>
-				<el-main>
+		</el-container>
+		<el-container class="el-menu-vertical-demo" :router="false" @select="onMenuSelect">
+			<el-aside>
+				<el-row class="tac">
+					<el-col :span="24">
+						<h3 class="edit" @click="handleEditClick">我的管理</h3>
+						<!-- <el-menu class="el-menu-vertical-demo" :router="false">
+							<el-sub-menu index="1">
+								<template #title>
+									<span>组织目录</span>
+								</template>
+								<template v-for="station in stationTree" :key="station.id">
+									<el-menu-item v-if="station.isDepartment === 1" :index="station.id.toString()"
+										:class="{ 'department-node': true }"
+										@click="goToDepartment(station.id,station.permitted)">
+										{{ station.name }}
+									</el-menu-item>
+									<el-sub-menu v-else :index="station.id.toString()">
+										<template #title>{{ station.name }}</template>
 
-					<RouterView />
-				</el-main>
-			</el-container>
+										<template v-for="child in station.children" :key="child.id">
+											<el-menu-item v-if="child.isDepartment === 1" :index="child.id.toString()"
+												:class="{ 'department-node': true }"
+												@click="goToDepartment(child.id,child.permitted)">
+												{{ child.name }}
+											</el-menu-item>
+											<el-sub-menu v-else :index="child.id.toString()">
+												<template #title>{{ child.name }}</template>
+
+												<template v-for="grandchild in child.children" :key="grandchild.id">
+													<el-menu-item v-if="grandchild.isDepartment === 1"
+														:index="grandchild.id.toString()"
+														:class="{ 'department-node': true }"
+														@click="goToDepartment(grandchild.id,grandchild.permitted)">
+														{{ grandchild.name }}
+													</el-menu-item>
+													<el-sub-menu v-else :index="grandchild.id.toString()">
+														<template #title>{{ grandchild.name }}</template>
+
+													</el-sub-menu>
+												</template>
+											</el-sub-menu>
+										</template>
+									</el-sub-menu>
+								</template>
+							</el-sub-menu>
+						</el-menu> -->
+						<el-menu>
+							<NavMenu :navMenus="leftMenus"></NavMenu>
+						</el-menu>
+					</el-col>
+				</el-row>
+			</el-aside>
+		</el-container>
+		<el-container>
+			<el-main>
+				<RouterView />
+			</el-main>
 		</el-container>
 	</div>
 </template>
@@ -86,6 +89,7 @@
 	import { RouterLink, useRouter, useRoute } from 'vue-router'
 	import { useUserStore } from '../store/user'
 	import { useStationStore } from '../store/station'
+	import NavMenu from '../components/NavMenu.vue'
 
 	import { getUserInfo, getQuestionnaireStatus, unfoldStation } from '../services/user'
 	import { ref, onBeforeMount, reactive, h, computed } from 'vue'
@@ -96,7 +100,6 @@
 	const router = useRouter()
 	const route = useRoute()
 	const user = useUserStore()
-	console.log('此时为从user里拿', user.token)
 
 	// 用户信息
 	const userInfo = ref({
@@ -105,10 +108,6 @@
 		username: ''
 	})
 	const permission = ref([{}])
-
-const activeStationId = computed(() =>
-  route.fullPath.match(/\/department\/(\d+)/)?.[1] ?? ''
-)
 	// 站点树数据
 	interface Station {
 		id : number
@@ -117,7 +116,7 @@ const activeStationId = computed(() =>
 		permitted : boolean
 		children ?: Station[]
 	}
-
+	const leftMenus = ref([])
 	const stationTree = ref<Station[]>([])
 
 	async function getPermission() {
@@ -130,45 +129,56 @@ const activeStationId = computed(() =>
 
 
 	// 获取站点树
-	const fetchStationTree = async (stationId : number) => {
-		try {
-			const res = await unfoldStation(stationId)
-			if (res && res.data) {
-				// 递归处理子站点
-				const processChildren = async (items : Station[]) => {
-					for (let item of items) {
-						// 如果不是部门，则继续获取子站点
-						if (item.isDepartment !== 1) {
-							try {
-								const childRes = await unfoldStation(item.id)
-								if (childRes && childRes.data) {
-									item.children = childRes.data
-									if (item.children) {
-										await processChildren(item.children)
-									}
-								}
-							} catch (error) {
-								// 处理404错误，不影响其他节点的渲染
-								console.warn('获取子站点失败，可能无子菜单:', item.id, error)
-								// 即使出错也继续处理其他节点
-							}
-						} else {
-							console.log('站点', item.id, '是部门，跳过获取子站点')
-						}
-					}
-				}
+	// const fetchStationTree = async (stationId : number) => {
+	// 	try {
+	// 		const res = await unfoldStation(stationId)
+	// 		if (res && res.data) {
+	// 			// 递归处理子站点
+	// 			const processChildren = async (items : Station[]) => {
+	// 				for (let item of items) {
+	// 					// 如果不是部门，则继续获取子站点
+	// 					if (item.isDepartment !== 1) {
+	// 						try {
+	// 							const childRes = await unfoldStation(item.id)
+	// 							if (childRes && childRes.data) {
+	// 								item.children = childRes.data
+	// 								if (item.children) {
+	// 									await processChildren(item.children)
+	// 								}
+	// 							}
+	// 						} catch (error) {
+	// 							// 处理404错误，不影响其他节点的渲染
+	// 							console.warn('获取子站点失败，可能无子菜单:', item.id, error)
+	// 							// 即使出错也继续处理其他节点
+	// 						}
+	// 					} else {
+	// 						console.log('站点', item.id, '是部门，跳过获取子站点')
+	// 					}
+	// 				}
+	// 			}
 
-				// 处理顶层站点
-				await processChildren(res.data)
-				stationTree.value = res.data
-				console.log('最终站点树:', stationTree.value)
-			}
-		} catch (error) {
-			console.error('获取站点树失败:', error)
-		}
-	}
+	// 			// 处理顶层站点
+	// 			await processChildren(res.data)
+	// 			stationTree.value = res.data
+	// 			console.log('最终站点树:', stationTree.value)
+	// 		}
+	// 	} catch (error) {
+	// 		console.error('获取站点树失败:', error)
+	// 	}
+	// }
 
 	// 初始化站点数据
+
+	async function getAllin() {
+		const res = await request({
+			url: "/station/allIn",
+			headers: {
+				'Authorization': `Bearer ${user.getToken}`
+			},
+		})
+		leftMenus.value = res.data;
+		console.log(res.data);
+	}
 	const initializeStationData = async () => {
 		// 只有在用户已登录的情况下才获取站点数据
 		if (!user.getToken || user.getToken === '--') {
@@ -177,7 +187,7 @@ const activeStationId = computed(() =>
 		}
 
 		try {
-			await fetchStationTree(1)
+			await getAllin()
 		} catch (error) {
 			console.error('初始化站点数据失败:', error)
 
@@ -213,16 +223,16 @@ const activeStationId = computed(() =>
 				userInfo.value.name = data.data.name || '';
 				userInfo.value.avatar = data.data.avatar || '';
 				userInfo.value.username = data.data.username || '';
-				if(userInfo.value.username===''){
-					router.push({name:'login'})
+				if (userInfo.value.username === '') {
+					router.push({ name: 'login' })
 				}
-				
+
 				// 保存用户信息到store
 				user.changeUserInfo(data.data);
 			} catch (error) {
 				console.error('获取用户信息失败:', error);
-				if(userInfo.value.username===''){
-					router.push({name:'login'})
+				if (userInfo.value.username === '') {
+					router.push({ name: 'login' })
 					localStorage.clear();
 					sessionStorage.clear()
 				}
@@ -245,7 +255,7 @@ const activeStationId = computed(() =>
 
 
 	// 跳转到部门详细页
-	const goToDepartment = (stationId : number,permitted: boolean) => {
+	const goToDepartment = (stationId : number, permitted : boolean) => {
 		if (permitted) (
 			router.push({ name: 'departmentDetail', params: { stationId: stationId } }))
 		else {
@@ -294,16 +304,17 @@ const activeStationId = computed(() =>
 	}
 
 	.el-aside {
-	position: fixed;
-	top: 100px;
-	left: 0;
-	width: 250px;
-	display: flex;
-	height : calc(100% - 100px)
+		position: fixed;
+		top: 100px;
+		left: 0;
+		width: 250px;
+		display: flex;
+		height: calc(100% - 100px)
 	}
-	.el-row{
-		  flex: 1;             
-		  overflow-y: auto;       
+
+	.el-row {
+		flex: 1;
+		overflow-y: auto;
 	}
 
 	.el-main {
@@ -383,24 +394,24 @@ const activeStationId = computed(() =>
 	}
 
 	/* 站点树标题样式 */
-.el-sub-menu .el-sub-menu__title {
-  font-weight: 500;
-}
+	.el-sub-menu .el-sub-menu__title {
+		font-weight: 500;
+	}
 
-/* 部门节点特殊样式 */
-.el-menu-vertical-demo .department-node {
-  background-color: #f0f8ff;
-  color: #1890ff;
-  font-weight: 500;
-  border-left: 3px solid #1890ff;
-}
+	/* 部门节点特殊样式 */
+	.el-menu-vertical-demo .department-node {
+		background-color: #f0f8ff;
+		color: #1890ff;
+		font-weight: 500;
+		border-left: 3px solid #1890ff;
+	}
 
-.el-menu-vertical-demo .department-node:hover {
-  background-color: #e6f7ff;
-}
+	.el-menu-vertical-demo .department-node:hover {
+		background-color: #e6f7ff;
+	}
 
-/* 已移除激活状态样式 */
-/* .el-menu-vertical-demo .el-menu-item.is-active,
+	/* 已移除激活状态样式 */
+	/* .el-menu-vertical-demo .el-menu-item.is-active,
 .el-menu-vertical-demo .department-node.is-active {
   background-color: #1890ff;
   color: white;
