@@ -14,7 +14,7 @@
   <h3>搜索人员</h3>
 
   <div class="search">
-    <el-input placeholder="请输入管理员姓名" v-model="username" class="search-input"/>
+    <el-input placeholder="请输入管理员学号" v-model="username" class="search-input"/>
     <el-button type="primary" @click="search">查询</el-button>
     <el-button type="primary" @click="setPermission">添加</el-button>
   </div>

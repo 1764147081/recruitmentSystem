@@ -32,7 +32,7 @@
     <el-button v-if="!ifCreate" @click="show = true">创建问卷</el-button>
     <el-button v-if="ifCreate&&form.status==0" @click="showEdit=true">添加</el-button>
     <el-button v-if="ifCreate" @click="handleDelete">删除</el-button>
-    <el-button v-if="ifCreate"  @click="show = true">编辑</el-button>
+    <el-button v-if="ifCreate&&form.status==0"  @click="show = true" >编辑</el-button>
   </div>
 
 
