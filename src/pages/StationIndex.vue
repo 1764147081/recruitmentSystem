@@ -319,7 +319,8 @@ async function search() {
     let data = await response.json()
     if(data.code == 200) {
       username.value = data.data.username
-     alert(data.data.username)
+      ElMessage.success(`已查询到人员${data.data.name}`)
+     
     }
   } catch (error) {
     console.log(error)
