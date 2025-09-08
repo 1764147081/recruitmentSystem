@@ -493,7 +493,6 @@ async function handleCreateQuestionnaire() {
       startTime: form.startTime,
       endTime: form.endTime,
       departmentId:props.departmentId,
-      collected:200,
       status:0
     });
     if(result.code===200){
@@ -519,7 +518,6 @@ async function handleUpdateQuestionnaire() {
       startTime: form.startTime,
       endTime: form.endTime,
       departmentId:props.departmentId,
-      collected:200,
       status:0
     });
     if(result.code===200){

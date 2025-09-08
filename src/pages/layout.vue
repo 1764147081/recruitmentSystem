@@ -11,9 +11,8 @@
 					<el-avatar :src="userInfo.avatar" @click="goToProfile" class="user-avatar"></el-avatar>
 					<span class="user-name">{{ userInfo.name }}</span>
 				</div>
-
-
 			</el-header>
+			
 			<el-container v-model:activeIndex="activeStationId" class="el-menu-vertical-demo"
 								:router="false" @select="onMenuSelect">
 				<el-aside>
@@ -101,7 +100,7 @@
 
 	// 用户信息
 	const userInfo = ref({
-		name: '名字',
+		name: '请重新登录',
 		avatar: '',
 		username: ''
 	})
@@ -211,21 +210,29 @@ const activeStationId = computed(() =>
 			// 获取用户信息
 			try {
 				const data = await fetchUserInfo();
-				userInfo.value.name = data.data.name || '名字';
+				userInfo.value.name = data.data.name || '';
 				userInfo.value.avatar = data.data.avatar || '';
 				userInfo.value.username = data.data.username || '';
-				console.log('用户信息:', data);
-
+				if(userInfo.value.username===''){
+					router.push({name:'login'})
+				}
+				
 				// 保存用户信息到store
 				user.changeUserInfo(data.data);
 			} catch (error) {
 				console.error('获取用户信息失败:', error);
+				if(userInfo.value.username===''){
+					router.push({name:'login'})
+					localStorage.clear();
+					sessionStorage.clear()
+				}
 			}
 		}
 	};
 
 	// 在页面加载前初始化用户状态
 	onBeforeMount(async () => {
+
 		await initializeUserState();
 		await initializeStationData();
 		// await getPermission()
@@ -290,21 +297,27 @@ const activeStationId = computed(() =>
 	position: fixed;
 	top: 100px;
 	left: 0;
-	width: 200px;
-}
+	width: 250px;
+	display: flex;
+	height : calc(100% - 100px)
+	}
+	.el-row{
+		  flex: 1;             
+		  overflow-y: auto;       
+	}
 
-.el-main {
-	margin-left: 200px;
-	padding-top: 100px;
+	.el-main {
+		margin-left: 200px;
+		padding-top: 100px;
 		height: calc(100% - 100px);
-		padding-top: 20px;
+		padding-top: 40px;
 		background: #fff;
 		border-right: 2px solid #e6e6e6;
 		box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
 	}
 
 	.el-main {
-		margin-left: 200px;
+		margin-left: 250px;
 		margin-top: 100px;
 		padding: 20px;
 		height: calc(100% - 100px);

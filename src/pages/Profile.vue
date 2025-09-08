@@ -21,14 +21,13 @@
             </el-col>
             <el-col :span="16">
               <el-descriptions :column="1" border>
-                <el-descriptions-item label="用户名">{{ userInfo.username }}</el-descriptions-item>
+                <el-descriptions-item label="学号">{{ userInfo.username }}</el-descriptions-item>
                 <el-descriptions-item label="姓名">{{ userInfo.name }}</el-descriptions-item>
                 <el-descriptions-item label="性别">{{ userInfo.gender }}</el-descriptions-item>
-                <el-descriptions-item label="学院">{{ userInfo.depart }}</el-descriptions-item>
+                <el-descriptions-item label="学院">{{ userInfo.college }}</el-descriptions-item>
                 <el-descriptions-item label="专业">{{ userInfo.major || '未填写' }}</el-descriptions-item>
                 <el-descriptions-item label="邮箱">{{ userInfo.email }}</el-descriptions-item>
                 <el-descriptions-item label="QQ">{{ userInfo.qq }}</el-descriptions-item>
-                <el-descriptions-item label="类型">{{ userInfo.type === 0 ? '学生' : '教师' }}</el-descriptions-item>
                 <el-descriptions-item label="个人简介">{{ userInfo.profile }}</el-descriptions-item>
               </el-descriptions>
             </el-col>
@@ -36,7 +35,7 @@
         </div>
         <div class="profile-edit" v-else>
           <el-form :model="editForm" label-width="100px" ref="editFormRef">
-            <el-form-item label="用户名">
+            <el-form-item label="学号">
               <el-input v-model="editForm.username" disabled />
             </el-form-item>
             <el-form-item label="姓名">
@@ -49,10 +48,10 @@
               </el-select>
             </el-form-item>
             <el-form-item label="学院">
-              <el-input v-model="editForm.depart" disabled />
+              <el-input v-model="editForm.college" disabled />
             </el-form-item>
             <el-form-item label="专业">
-              <el-input v-model="editForm.major" />
+              <el-input v-model="editForm.major" disabled/>
             </el-form-item>
             <el-form-item label="邮箱">
               <el-input v-model="editForm.email" />
@@ -123,7 +122,7 @@ const baseURL="https://i.sdu.edu.cn/XSZX/NXXT/api"
 const userInfo = ref({
   username: '',
   gender: '',
-  depart: '',
+  college: '',
   major: '',
   name: '',
   email: '',
@@ -140,7 +139,7 @@ const isEditing = ref(false)
 const editForm = ref({
   username: '',
   gender: '',
-  depart: '',
+  college: '',
   major: '',
   name: '',
   email: '',

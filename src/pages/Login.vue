@@ -380,6 +380,18 @@ const response = await fetch(`${baseURL}/user/login/cas?${queryParams}`, {
   align-items: center;
 }
 
+  /* 确保输入框宽度一致 */
+  .demo-form-inline :deep(.el-form-item) {
+  width: 100%;
+  max-width: 200px;
+  display: flex;
+  justify-content: center;
+}
+
+  .demo-form-inline :deep(.el-input) {
+  width: 100%;
+}
+
 .login-button {
   width: 100%;
   margin-top: 20px;
@@ -400,7 +412,7 @@ const response = await fetch(`${baseURL}/user/login/cas?${queryParams}`, {
   justify-content: flex-start;
   align-items: center;
   width: 100%;
-  padding-left: 30%;
+  padding-left: 0%;
   box-sizing: border-box;
 }
 
