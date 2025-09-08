@@ -8,7 +8,7 @@
 					<el-button>登录</el-button>
 				</RouterLink>
 				<div class="user-info" v-else>
-					<el-avatar :src="userInfo.avatar" @click="goToProfile" class="user-avatar"></el-avatar>
+					<el-avatar :src="userInfo.avatar || default_avatar" @click="goToProfile" class="user-avatar"></el-avatar>
 					<span class="user-name">{{ userInfo.name }}</span>
 				</div>
 			</el-header>
@@ -90,6 +90,7 @@
 	import { getUserInfo, getQuestionnaireStatus, unfoldStation } from '../services/user'
 	import { ref, onBeforeMount, reactive, h, computed } from 'vue'
 	import { request } from '@/services/1.js'
+	import default_avatar from '../../public/avatar.png'
 
 	const baseURL = "https://i.sdu.edu.cn/XSZX/NXXT/api"
 	const onMenuSelect = () => false
