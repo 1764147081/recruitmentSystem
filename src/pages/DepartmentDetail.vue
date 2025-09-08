@@ -24,7 +24,7 @@
 					<div class="admin-cards" v-if="departmentInfo.administrators && Array.isArray(departmentInfo.administrators)">
 						<div class="admin-card" v-for="admin in departmentInfo.endAdmin" :key="admin.username">
 							<div class="admin-header">
-								<img class="admin-avatar" :src="admin.avatar || './avatar.png'" :alt="admin.name" />
+								<img class="admin-avatar" :src="admin.avatar || default_avatar" :alt="admin.name" />
 								<div class="admin-name">{{ admin.name }}</div>
 							</div>
 							<div class="admin-details">
@@ -74,6 +74,7 @@
 	} from '../services/1.js';
 	import Station from '../components/Station.vue'
 	import Question from '../components/Question.vue'
+	import default_avatar from '../../public/avatar.png'
 
 
 	// 获取路由参数
