@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div class="custom-menu">
 		<template v-for="(navMenu, index) in navMenus" :key="navMenu.id">
 			<el-menu-item v-if="navMenu.isDepartment === 1" :index="String(navMenu.id)"
 				@click="goToDepartment(navMenu.id, navMenu.permitted)">
@@ -42,4 +42,35 @@
 	}
 </script>
 <style scoped>
+.custom-menu {
+            --el-menu-active-color: rgba(159, 35, 26, 1);
+            --el-menu-text-color: #333;
+            --el-menu-hover-text-color: rgba(159, 35, 26, 1);
+            --el-menu-bg-color: #fff;
+            --el-menu-hover-bg-color: #f5f5f5;
+            --el-menu-item-height: 56px;
+        }
+        
+        .custom-menu .el-menu-item {
+            font-weight: 500;
+        }
+        
+        .custom-menu .el-menu-item.is-active {
+            color: rgba(159, 35, 26, 1);
+            background-color: rgba(159, 35, 26, 0.1);
+            font-weight: 600;
+        }
+        
+        .custom-menu .el-sub-menu__title {
+            font-weight: 500;
+        }
+        
+        .custom-menu .el-sub-menu__title:hover {
+            color: rgba(159, 35, 26, 1);
+            background-color: #f5f5f5;
+        }
+        
+        .custom-menu .el-sub-menu .el-menu-item {
+            font-weight: 400;
+        }
 </style>
