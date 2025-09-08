@@ -210,6 +210,18 @@ export function getFinishedQuestionnaire(departmentId) {
 }
 
 
+export function getFinishedByUsername(username,questionnaireId){
+    return service({
+    url: `/answer/view/user_questionnaire?username=${username}&questionnaireId=${questionnaireId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
+
 export function getAnswerByFinishedId(finishedId){
   return service({
     url: `/answer/view/answers?finishId=${finishedId}`,

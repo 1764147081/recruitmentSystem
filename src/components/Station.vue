@@ -1,4 +1,7 @@
 <template>
+	<el-input v-model="searchUsername" placeholder="请输入学号" clearable  style="width: 200px;"/>
+	<el-button type="primary" @click="getFinishByUsername" style="margin-left: 10px;">查询</el-button>
+	<el-button type="primary" @click="getFinish">查询所有</el-button>
 	<el-table :data="userInfo" style="width: 100%" v-if="!show">
 		<el-table-column prop="name" label="姓名" width="200" />
 		<el-table-column prop="college" label="学院" width="200" />
@@ -64,10 +67,29 @@
 </template>
 
 <script lang="ts" setup>
-import { Document, Avatar } from '@element-plus/icons-vue';
+
 	const show = ref(false)
 const showUserInfo = ref(false)
-const currentUserInfo = ref({})
+interface UserInfo {
+	username: string,
+	college: string,
+	name: string,
+	qq: string,
+	email: string,
+	profile: string,
+	major: string,
+	avatar: string,
+}
+const currentUserInfo = ref<UserInfo>({
+	username: '',
+	college: '',
+	name: '',
+	qq: '',
+	email: '',
+	profile: '',
+	major: '',
+	avatar: '',
+})
 
 	const props = defineProps({
 		departmentId: {
@@ -77,7 +99,7 @@ const currentUserInfo = ref({})
 	})
 
 	import { reactive, ref, watch } from 'vue'
-	import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId } from '../services/user';
+	import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId, getQuestionnaire,getFinishedByUsername } from '../services/user';
 	import { onMounted } from 'vue';
 	let sort = 0;
 	interface User {
@@ -98,7 +120,7 @@ const currentUserInfo = ref({})
 	}
 	const answerInfo = ref<Answer[]>([])
 
-const viewUserInfo = async (row) => {
+const viewUserInfo = async (row: { username: any; }) => {
   try {
     const res = await getUserInfoByUsername(row.username);
 if (res.code === 200) {
@@ -185,6 +207,7 @@ if (res.code === 200) {
 		if (props.departmentId) {
 			try {
 				await getFinish() // 等待获取完成
+				await fetchQuestionnaire()
 			} catch (error) {
 				console.log(error)
 				userInfo.value = []
@@ -197,12 +220,88 @@ if (res.code === 200) {
 		if (newVal) {
 			try {
 				await getFinish() // 等待获取完成
+				await fetchQuestionnaire()
 			} catch (error) {
 				console.log(error)
 				userInfo.value = []
 			}
 		}
 	})
+
+    const searchUsername = ref(0)
+	const questionnaireId = ref(0)
+	
+	async function fetchQuestionnaire() {
+  try {
+    const result = await getQuestionnaire(props.departmentId);
+    if(result.code===200){
+        questionnaireId.value=result.data.id;
+    }
+  } catch (error) {
+    console.error("发生错误:", error);
+  }
+}
+   
+   async function getFinishByUsername() {
+		try {
+			userInfo.value = []
+			const result = await getFinishedByUsername(searchUsername.value,questionnaireId.value);
+			if (result.code === 200) {
+				console.log("获取到的个人问卷数据:",result.data)
+
+					const tempUsers : User[] = []
+					try {
+						const userDetail = await getUserInfoByUsername(searchUsername.value)
+						console.log('用户详情:', userDetail)
+
+						if (userDetail.code === 200 && userDetail.data) {
+							tempUsers.push({
+								username: searchUsername.value,
+								college: userDetail.data.college || '',
+								name: userDetail.data.name || '',
+								finishedId: result.data.id,
+								qq: userDetail.data.qq || '',
+								email: userDetail.data.email || '',
+								profile: userDetail.data.profile || '',
+								major: userDetail.data.major || ''
+							})
+						} else {
+							// 如果获取详情失败，至少保留用户名
+							tempUsers.push({
+								username: searchUsername.value,
+								college: '无权访问',
+								name: '无权访问',
+								finishedId: result.data.id,
+								qq: '无权访问',
+								email: '无权访问',
+								profile: '无权访问',
+								major: '无权访问',
+							})
+						}
+					} catch (error) {
+						console.log(`获取用户${searchUsername.value}信息失败:`, error)
+						tempUsers.push({
+							username: searchUsername.value,
+							college: '获取失败',
+							name: '获取失败',
+							finishedId: result.data.id,
+							qq: '',
+							email: '',
+							profile: '',
+							major: '',
+						})
+					}
+
+                  userInfo.value = tempUsers
+			}
+		} catch (error) {
+			console.error("发生错误:", error);
+			userInfo.value = []
+		}
+		
+	}
+
+
 
 	async function getFinish() {
 		try {
