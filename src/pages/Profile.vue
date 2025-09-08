@@ -237,15 +237,19 @@ const onAvatarChange = async (e) => {
   
   try {
     // 上传头像
-    const res = await uploadAvatar(file)
-    console.log('上传头像成功:', res)
+    const res1 = await uploadAvatar(file)
+    console.log('上传头像成功:', res1)
     
-    // 更新store中的用户信息
-    const updatedUserInfo = { ...userStore.getUserInfo, avatar: res.data.url }
-    userStore.changeUserInfo(updatedUserInfo)
-    
-    // 更新页面显示的用户信息
-    userInfo.value = updatedUserInfo
+    const res = await getUserInfo();
+    console.log('接口获取的用户信息:', res);
+    if (res.code === 200) {
+      // 更新store中的用户信息
+      userStore.changeUserInfo(res.data);
+      // 更新页面显示的用户信息
+      userInfo.value = res.data;
+      // 检查是否有密码
+      hasPassword.value = res.data.password && res.data.password !== '';
+    }
     
     ElMessage.success('头像更新成功')
   } catch (error) {

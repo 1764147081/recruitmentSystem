@@ -12,6 +12,13 @@ service.interceptors.request.use(
   config => {
     // 获取用户store实例
     const userStore = useUserStore()
+	if (config.data instanceof FormData) {
+	    // 直接返回，让浏览器自动加 multipart
+		if (userStore.getToken && userStore.getToken !== '--') {
+		  config.headers['Authorization'] = `Bearer ${userStore.getToken}`
+		}
+	    return config
+	  }
     config.headers['Content-Type'] = 'application/json';
 
     // 如果store中有token，则添加到请求头中

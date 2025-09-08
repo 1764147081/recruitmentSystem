@@ -42,14 +42,11 @@ export function updateUserInfo(data) {
 export function uploadAvatar(file) {
   const formData = new FormData();
   formData.append('file', file);
-  
+
   return service({
     url: '/user/upload/avatar',
     method: 'post',
     data: formData,
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
   }).then(res => {
     return res.data;
   }).catch(err => {
