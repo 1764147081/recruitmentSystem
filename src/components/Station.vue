@@ -141,7 +141,7 @@ const props = defineProps({
 const getCurrentAnswers = async () => {
 	loading.value = true
 	const tempUsers: User[] = []
-	const key = `${currentPage.value}-${pageSize.value}`
+	const key = `${currentPage.value}-${pageSize.value}+${props.departmentId}`
 	try{
 	if (UserInfoCache.value[key]) {
 		userInfo.value = UserInfoCache.value[key]
@@ -308,6 +308,8 @@ onMounted(async () => {
 		try {
 			await getFinish() // 等待获取完成
 			await fetchQuestionnaire()
+			await getCurrentAnswers()
+
 		} catch (error) {
 			console.log(error)
 			userInfo.value = []
@@ -322,6 +324,7 @@ watch(() => props.departmentId, async (newVal) => {
 		try {
 			await getFinish() // 等待获取完成
 			await fetchQuestionnaire()
+			await getCurrentAnswers()
 		} catch (error) {
 			console.log(error)
 			userInfo.value = []
