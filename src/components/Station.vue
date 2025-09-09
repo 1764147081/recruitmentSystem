@@ -27,6 +27,8 @@
 
 		<div class="answerInfo" v-if="show">
 			<el-button type="danger" @click="show = false">关闭</el-button>
+			<div class="SignUpsName">{{ form.name }}</div>
+			<div class="SignUpsUsername">学号：{{ form.username }}</div>
 			<el-card v-for="item in answerInfo" :key="item.content" class="question-card" shadow="hover">
 				<div class="question-header">
 					<span class="question-icon"><el-icon>
@@ -652,5 +654,21 @@ async function getAnswer(row: User) {
 .demo-ruleForm {
 	width: 80%;
 	margin-left: 7%;
+}
+
+.SignUpsName {
+  font-size: 20px;
+  font-weight: bold;
+  color: #303133;
+  margin: 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.SignUpsUsername {
+  font-size: 14px;
+  color: #606266;
+  margin-bottom: 20px;
+  padding-left: 5px;
 }
 </style>
