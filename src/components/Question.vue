@@ -111,9 +111,6 @@
         <el-button link type="danger" size="small" @click="handleDeleteQuestion(scope.row)" :disabled="form.status==1" v-if="form.status===0">
           删除
         </el-button>
-        <el-button link type="primary" size="small" @click="handleEditQuestion(scope.row)" :disabled="form.status==1" v-if="form.status===0">
-          编辑
-        </el-button>
         <el-button link type="primary" size="small" @click="handleEditButtonClick(scope.row)" v-if="form.status===0">
           编辑
         </el-button>

@@ -60,7 +60,7 @@ export function updatePassword(data) {
   return service({
     url: '/user/update/password',
     method: 'post',
-    data
+    params : data
   }).then(res => {
     return res.data;
   }).catch(err => {
