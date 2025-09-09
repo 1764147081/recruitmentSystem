@@ -206,7 +206,7 @@ finally{
 }
 
 import { reactive } from 'vue'
-import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId, getQuestionnaire,getFinishedByUsername ,getFinishedByName,submitScore,getScore,exportExcel} from '../services/user';
+import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId, getQuestionnaire,getFinishedByUsername ,getFinishedByName,submitScore,getScore,exportExcel,getFinishedByUserName} from '../services/user';
 import { onMounted } from 'vue';
 import { el, te } from 'element-plus/es/locales.mjs'
 import { ElMessage } from 'element-plus'
@@ -345,60 +345,37 @@ async function getFinishByUsername() {
   const value = searchUsername.value;
   const isNumber = typeof value === 'number' || 
                   (typeof value === 'string' && /^\d+$/.test(value.trim()));
-
   if (isNumber) {
     try {
       userInfo.value = [];
-      // 若为字符串类型的数字，转换为number（根据接口需求决定是否需要）
-      const username = typeof value === 'string' ? Number(value) : value;
-      const result = await getFinishedByUsername(username, questionnaireId.value);
-      
+      const username = typeof value === 'string' ? Number(value) : value; 
+      const result = await  getFinishedByUserName(searchUsername.value, props.departmentId);
+	  const tempUsers: User[] = [];
       if (result.code === 200) {
-        console.log("获取到的个人问卷数据:", result.data);
-        const tempUsers: User[] = [];
-
-        try {
-          const userDetail = await getUserInfoByUsername(username);
-          console.log('用户详情:', userDetail);
-
-          if (userDetail.code === 200 && userDetail.data) {
-            tempUsers.push({
-              username: username,
-              college: userDetail.data.college || '',
-              name: userDetail.data.name || '',
-              finishedId: result.data.id,
-              qq: userDetail.data.qq || '',
-              email: userDetail.data.email || '',
-              profile: userDetail.data.profile || '',
-              major: userDetail.data.major || ''
-            });
-          } else {
-            tempUsers.push({
-              username: username,
-              college: '无权访问',
-              name: '无权访问',
-              finishedId: result.data.id,
-              qq: '无权访问',
-              email: '无权访问',
-              profile: '无权访问',
-              major: '无权访问',
-            });
-          }
-        } catch (error) {
-          console.log(`获取用户${username}信息失败:`, error);
-          tempUsers.push({
-            username: username,
-            college: '获取失败',
-            name: '获取失败',
-            finishedId: result.data.id,
-            qq: '',
-            email: '',
-            profile: '',
-            major: '',
-          });
-        }
-
-        userInfo.value = tempUsers;
+		 console.log("获取到的个人问卷数据:", result.data);
+		 for(let i=0;i<result.data.length;i++){
+			tempUsers.push({
+			username:result.data[i].username||'',
+			college:result.data[i].college||'',
+			name:result.data[i].name||'',
+			finishedId:result.data[i].finishId||'',
+			qq:'',
+			email:'',
+			profile:'',
+			major:'',
+		})
+      userInfo.value = tempUsers;
+      }}else{
+       tempUsers.push({
+			username:username,
+			college:'无权访问',
+			name:'',
+			finishedId:0,
+			qq:'',
+			email:'',
+			profile:'',
+			major:'',
+		})
       }
     } catch (error) {
       console.error("发生错误:", error);
@@ -412,18 +389,19 @@ async function getFinishByUsername() {
 	  const tempUsers: User[] = [];
       if (result.code === 200) {
 		 console.log("获取到的个人问卷数据:", result.data);
-		tempUsers.push({
-			username:result.data[0].username||'',
-			college:result.data[0].college||'',
-			name:username,
-			finishedId:result.data[0].id||'',
+		 for(let i=0;i<result.data.length;i++){
+			tempUsers.push({
+			username:result.data[i].username||'',
+			college:result.data[i].college||'',
+			name:result.data[i].name||'',
+			finishedId:result.data[i].finishId||'',
 			qq:'',
 			email:'',
 			profile:'',
 			major:'',
 		})
       userInfo.value = tempUsers;
-      }else{
+      }}else{
        tempUsers.push({
 			username:0,
 			college:'无权访问',

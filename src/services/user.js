@@ -251,6 +251,16 @@ export function getFinishedByName(name,departmentId){
   });
 }
 
+export function getFinishedByUserName(name,departmentId){
+  return service({
+    url: `/screen/?studentNumber=${name}&departmentId=${departmentId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
 
 
 export function submitScore(finishedId,score){
@@ -263,6 +273,8 @@ export function submitScore(finishedId,score){
     throw err;
   });
 }
+
+
 
 export function getScore(finishedId){
   return service({
