@@ -197,7 +197,7 @@ finally{
 }
 
 import { reactive } from 'vue'
-import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId } from '../services/user';
+import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId, getQuestionnaire,getFinishedByUsername } from '../services/user';
 import { onMounted } from 'vue';
 let sort = 0;
 interface User {
