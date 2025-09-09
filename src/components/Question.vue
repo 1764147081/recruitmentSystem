@@ -92,10 +92,12 @@
         <el-button link type="danger" size="small" @click="handleDeleteQuestion(scope.row)" :disabled="form.status==1" v-if="form.status===0">
           删除
         </el-button>
+        <el-button link type="primary" size="small" @click="handleEditQuestion(scope.row)" :disabled="form.status==1" v-if="form.status===0">
+          编辑
+        </el-button>
         <el-button link type="primary" size="small" @click="handleViewQuestion(scope.row)">
-  查看
-</el-button>
-
+          查看
+        </el-button>
      </template>
     </el-table-column>
     </el-table>
@@ -134,7 +136,7 @@
       <el-input v-model="formdata.content" />
 
     </el-form-item>
-    <el-form-item v-if="typeData!==3" label="请输入选项" prop="options">
+    <el-form-item v-if="typeData!==3" label="请输入选项" prop="option">
       <div v-for="(option, index) in formdata.option" :key="index" class="option-item">
         <el-input v-model="option.optionContent" placeholder="请输入选项内容" />
         <el-button type="danger" size="small" @click="removeOption(index)" v-if="formdata.option.length > 1">
@@ -184,13 +186,9 @@ import { useRouter } from 'vue-router';
 
 const userStore = useUserStore();
 const router = useRouter();
-
-   
-
 const props = defineProps({
 
    departmentId: {
-
     type: Number,
     required: true
   },
@@ -288,6 +286,35 @@ const handleViewQuestion = async (row) => {
   }
 };
 
+// 编辑题目
+const handleEditQuestion = (row) => {
+  try {
+    // 设置编辑状态和题目类型
+    showEdit.value = true;
+    showQuestionEdit.value = true;
+    typeData.value = row.type;
+    
+    // 填充表单数据
+    formdata.value = {
+      id: row.id, // 保存题目id用于更新
+      questionnaireId: row.questionnaireId,
+      type: row.type,
+      content: row.content,
+      sort: row.sort,
+      option: row.option ? (() => { try { return typeof row.option === 'string' ? JSON.parse(row.option) : Array.isArray(row.option) ? row.option : []; } catch(e) { console.error('解析选项失败:', e); return []; } })() : []
+    };
+    
+    // 如果是单选题或多选题，确保至少有一个选项
+    if (row.type !== 3 && (!formdata.value.option || formdata.value.option.length === 0)) {
+      formdata.value.option = [{ optionContent: '', optionSort: 0 }];
+    }
+    
+  } catch (error) {
+    console.error('编辑题目失败:', error);
+    ElMessage.error('加载题目失败，请重试');
+  }
+};
+
 // 初始化选项数组
 const initOptions = () => {
   formdata.value.option = [{ optionContent: '', optionSort: 0 }];
@@ -317,25 +344,29 @@ const formdata = ref({
     content:'',
     sort:0,
     option:[
-      {
-        optionContent:'',
-        optionSort:0
-      },
-      {
-        optionContent:'',
-        optionSort:1
-      },
-      {
-        optionContent:'',
-        optionSort:2
-      },
-      {
-        optionContent:'',
-        optionSort:3
+    {
+      id: 0,
+      optionContent:'',
+      optionSort:0
+    },
+    {
+      id: 0,
+      optionContent:'',
+      optionSort:1
+    },
+    {
+      id: 0,
+      optionContent:'',
+      optionSort:2
+    },
+    {
+      id: 0,
+      optionContent:'',
+      optionSort:3
 
-      }
+    }
 
-    ]
+  ]
 })
 
 
@@ -354,15 +385,23 @@ async function addQuestions() {
 
     // 确保选项格式正确，使用"option"而不是"options"
     if (typeData.value === 3) {
-      formDataObj.option = [
-      ]; // 改为与示例一致的"option"
+      formDataObj.option = []; // 改为与接口一致的"option"
     }
 
     // 确保allQuestions在正确的作用域内
     let allQuestions = [];
     if (data !== null && Array.isArray(data)) {
-      formDataObj.sort = data.length + 1;
-      allQuestions = [...data, formDataObj];
+      // 检查是否是编辑操作（存在id）
+      if (formDataObj.id) {
+        // 如果是编辑操作，替换现有问题
+        allQuestions = data.map(question => 
+          question.id === formDataObj.id ? formDataObj : question
+        );
+      } else {
+        // 如果是新增操作，添加到列表末尾
+        formDataObj.sort = data.length + 1;
+        allQuestions = [...data, formDataObj];
+      }
     } else {
       formDataObj.sort = 1; // 第一个问题排序为1
       allQuestions = [formDataObj];
@@ -370,14 +409,14 @@ async function addQuestions() {
 
     // 验证并修正option格式（如果需要）
     allQuestions.forEach(question => {
-      // 确保存在option属性且为数组
-      if (!question.option) question.option = [];
-      // 如果之前用了options，这里可以迁移数据
-      if (question.options && !question.option.length) {
-        question.option = question.options;
-        delete question.options;
-      }
-    });
+    // 确保存在option属性且为数组
+    if (!question.option) question.option = [];
+    // 如果之前用了options，这里可以迁移数据
+    if (question.options && !question.option.length) {
+      question.option = question.options;
+      delete question.options;
+    }
+  });
 
     console.log('表格数据', formDataObj);
     console.log('请求数据', allQuestions);
@@ -395,6 +434,7 @@ async function addQuestions() {
     if (data2.code === 200) {
       ElMessage.success('添加成功');
       getQuestion(props.departmentId);
+      // 成功后重置表单，包含id字段以便区分新增和编辑操作
       showEdit.value = false;
       showQuestionEdit.value=false;
       formdata.value={
