@@ -74,7 +74,6 @@
 </template>
 
 <script lang="ts" setup>
-import { Document, Avatar } from '@element-plus/icons-vue';
 import { ref, computed, watch } from 'vue'
 
 // 分页相关变量
@@ -105,7 +104,29 @@ const handleCurrentChange = async (newPage: number) => {
 }
 const show = ref(false)
 const showUserInfo = ref(false)
-const currentUserInfo = ref({})
+
+interface UserInfo {
+	username: number,
+	college: string,
+	name: string,
+	finishedId: number,
+	qq: string,
+	email: string,
+	profile: string,
+	major: string,
+	avatar: string,
+}
+const currentUserInfo = ref<UserInfo>({
+	username: 0,
+	college: '',
+	name: '',
+	finishedId: 0,
+	qq: '',
+	email: '',
+	profile: '',
+	major: '',
+	avatar: '',
+})
 
 const props = defineProps({
 	departmentId: {
@@ -197,7 +218,7 @@ interface Answer {
 }
 const answerInfo = ref<Answer[]>([])
 
-const viewUserInfo = async (row) => {
+const viewUserInfo = async (row: { username: any; }) => {
 	try {
 		const res = await getUserInfoByUsername(row.username);
 		if (res.code === 200) {
