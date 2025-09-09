@@ -60,7 +60,7 @@ export function updatePassword(data) {
   return service({
     url: '/user/update/password',
     method: 'post',
-    data
+    params : data
   }).then(res => {
     return res.data;
   }).catch(err => {
@@ -206,7 +206,16 @@ export function getFinishedQuestionnaire(departmentId) {
   });
 }
 
-
+export function getFinishedByUsername(username,questionnaireId){
+    return service({
+    url: `/answer/view/user_questionnaire?username=${username}&questionnaireId=${questionnaireId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
 export function getAnswerByFinishedId(finishedId){
   return service({
     url: `/answer/view/answers?finishId=${finishedId}`,
@@ -231,4 +240,37 @@ export function deleteQuestion(questionId,departmentId){
 
 
 
+export function getFinishedByName(name,departmentId){
+  return service({
+    url: `/screen/?name=${name}&departmentId=${departmentId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
 
+
+
+export function submitScore(finishedId,score){
+  return service({
+    url: `/answer/estimate?finishId=${finishedId}&score=${score}`,
+    method: 'post'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
+export function getScore(finishedId){
+  return service({
+    url: `/answer/score?finishId=${finishedId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}

@@ -11,10 +11,29 @@
         <div v-if="currentQuestion.option && currentQuestion.option.length > 0">
           <p><strong>选项：</strong></p>
           <ul class="options-list">
-            <li v-for="(option, index) in currentQuestion.option" :key="index">
-              {{ String.fromCharCode(65 + index) }}: {{ option.optionContent }}
+            <li v-for="(option, index) in currentQuestion.option" :key="index" class="option-item">
+              <span>{{ String.fromCharCode(65 + index) }}: {{ option.optionContent }}</span>
+              <div class="button-container" v-if="form.status === 0 && isEditMode">
+                <el-button type="primary" size="small" @click="handleUpdateOption(option)" style="margin-right: 10px;">
+                  编辑
+                </el-button>
+                <el-button type="danger" size="small" @click="handleDeleteOption(option.optionId || option.id, option.optionContent)">
+                  删除
+                </el-button>
+              </div>
             </li>
           </ul>
+          <!-- 添加选项按钮 - 仅对单选题和多选题显示 -->
+          <el-button v-if="(currentQuestion.type === 1 || currentQuestion.type === 2) && form.status === 0 && isEditMode" type="primary" size="small" @click="handleAddOption">
+            添加选项
+          </el-button>
+        </div>
+        <!-- 如果没有选项但题目类型是单选题或多选题，也显示添加选项按钮 -->
+        <div v-else-if="(currentQuestion.type === 1 || currentQuestion.type === 2)">
+          <p><strong>选项：</strong>暂无选项</p>
+          <el-button v-if="form.status === 0 && isEditMode" type="primary" size="small" @click="handleAddOption">
+            添加选项
+          </el-button>
         </div>
         <div v-else-if="currentQuestion.type === 3">
           <p><strong>题型说明：</strong>简答题</p>
@@ -92,10 +111,12 @@
         <el-button link type="danger" size="small" @click="handleDeleteQuestion(scope.row)" :disabled="form.status==1" v-if="form.status===0">
           删除
         </el-button>
+        <el-button link type="primary" size="small" @click="handleEditButtonClick(scope.row)" v-if="form.status===0">
+          编辑
+        </el-button>
         <el-button link type="primary" size="small" @click="handleViewQuestion(scope.row)">
-  查看
-</el-button>
-
+          查看
+        </el-button>
      </template>
     </el-table-column>
     </el-table>
@@ -134,7 +155,7 @@
       <el-input v-model="formdata.content" />
 
     </el-form-item>
-    <el-form-item v-if="typeData!==3" label="请输入选项" prop="options">
+    <el-form-item v-if="typeData!==3" label="请输入选项" prop="option">
       <div v-for="(option, index) in formdata.option" :key="index" class="option-item">
         <el-input v-model="option.optionContent" placeholder="请输入选项内容" />
         <el-button type="danger" size="small" @click="removeOption(index)" v-if="formdata.option.length > 1">
@@ -158,6 +179,14 @@
 
 </div>
 </template>
+<style scoped>
+.option-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+}
+</style>
 <script setup>
 import { createQuestionnaire,getQuestionnaireDetailedById,getQuestionnaire,publishQuestionnaire,deleteQuestionnaire,deleteQuestion } from '../services/user';
 import { ElDialog, ElCard, ElEmpty } from 'element-plus';
@@ -184,13 +213,9 @@ import { useRouter } from 'vue-router';
 
 const userStore = useUserStore();
 const router = useRouter();
-
-   
-
 const props = defineProps({
 
    departmentId: {
-
     type: Number,
     required: true
   },
@@ -266,6 +291,7 @@ const selectedTypeName = computed(() => {
 // 弹窗控制
 const dialogVisible = ref(false);
 const currentQuestion = ref(null);
+const isEditMode = ref(false); // 添加编辑模式标志变量
 
 // 获取题目类型名称
 const getQuestionTypeName = (type) => {
@@ -282,9 +308,200 @@ const handleViewQuestion = async (row) => {
   try {
     dialogVisible.value = true;
     currentQuestion.value = row;
+    isEditMode.value = false; // 设置为查看模式
   } catch (error) {
     console.error('查看题目详情失败:', error);
     ElMessage.error('加载题目失败，请重试');
+  }
+};
+
+// 编辑按钮点击事件 - 显示题目详情弹窗
+const handleEditButtonClick = async (row) => {
+  try {
+    dialogVisible.value = true;
+    currentQuestion.value = row;
+    isEditMode.value = true; // 设置为编辑模式
+  } catch (error) {
+    console.error('加载题目失败:', error);
+    ElMessage.error('加载题目失败，请重试');
+  }
+};
+
+// 编辑选项按钮点击事件
+const handleUpdateOption = async (option) => {
+  try {
+    // 提示用户输入新的选项内容，预设为当前选项内容
+    const { value: newOptionContent } = await ElMessageBox.prompt(
+      '请输入新的选项内容:',
+      '编辑选项',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPattern: /^\S+$/, // 至少一个非空白字符
+        inputErrorMessage: '选项内容不能为空',
+        inputValue: option.optionContent // 预设当前选项内容
+      }
+    );
+
+    // 准备请求参数
+    const departmentId = props.departmentId;
+    const optionId = option.optionId || option.id;
+    const questionId = currentQuestion.value.id;
+    const optionSort = option.optionSort;
+
+    // 发送请求到option/update接口
+    const res = await fetch(`https://i.sdu.edu.cn/XSZX/NXXT/api/option/update?departmentId=${departmentId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userStore.getToken}`
+      },
+      body: JSON.stringify({
+        optionId,
+        questionId,
+        optionContent: newOptionContent,
+        optionSort
+      })
+    });
+
+    const data = await res.json();
+    if (data.code === 200) {
+      ElMessage.success('编辑选项成功');
+      // 重新获取题目数据以更新列表
+      const questionId = currentQuestion.value.id;
+      // 刷新当前题目详情
+      await getQuestion(props.departmentId);
+      // 重新找到当前题目
+      const updatedQuestion = questionList.value.find(q => q.id === questionId);
+      if (updatedQuestion) {
+        currentQuestion.value = updatedQuestion;
+      }
+    } else {
+      ElMessage.error(data.msg || '编辑失败，请重试');
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('编辑选项失败:', error);
+      ElMessage.error('编辑失败，请重试');
+    }
+  }
+};
+
+// 删除选项按钮点击事件
+const handleDeleteOption = async (optionId, optionContent) => {
+  try {
+    // 调试：查看选项ID值
+    console.log('尝试删除的选项ID:', optionId);
+    
+    if (!optionId) {
+      ElMessage.error('选项ID不存在，无法删除');
+      return;
+    }
+    
+    // 确认删除操作
+    await ElMessageBox.confirm(
+      `确定要删除选项 "${optionContent}" 吗？`,
+      '删除确认',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    );
+    
+    // 准备请求参数
+    const departmentId = props.departmentId;
+    
+    // 发送请求到option/delete接口
+    const res = await fetch(`https://i.sdu.edu.cn/XSZX/NXXT/api/option/delete?optionId=${optionId}&departmentId=${departmentId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userStore.getToken}`
+      }
+    });
+    
+    const data = await res.json();
+    
+    if (data.code === 200) {
+      ElMessage.success('删除成功');
+      // 重新获取题目数据以更新列表
+      const questionId = currentQuestion.value.id;
+      // 刷新当前题目详情
+      await getQuestion(props.departmentId);
+      // 重新找到当前题目
+      const updatedQuestion = questionList.value.find(q => q.id === questionId);
+      if (updatedQuestion) {
+        currentQuestion.value = updatedQuestion;
+      }
+    } else {
+      ElMessage.error(data.msg || '删除失败，请重试');
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除选项失败:', error);
+      ElMessage.error('删除失败，请重试');
+    }
+  }
+};
+
+// 添加选项按钮点击事件
+const handleAddOption = async () => {
+  try {
+    // 提示用户输入选项内容
+    const { value: optionContent } = await ElMessageBox.prompt(
+      '请输入选项内容:',
+      '添加选项',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPattern: /^\S+$/, // 至少一个非空白字符
+        inputErrorMessage: '选项内容不能为空'
+      }
+    );
+    
+    // 准备请求参数
+    const questionId = currentQuestion.value.id;
+    const departmentId = props.departmentId;
+    const optionSort = currentQuestion.value.option ? currentQuestion.value.option.length : 0;
+    
+    // 发送请求到option/create接口
+    const res = await fetch(`https://i.sdu.edu.cn/XSZX/NXXT/api/option/create?departmentId=${departmentId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userStore.getToken}`
+      },
+      body: JSON.stringify({
+        questionId,
+        optionContent,
+        optionSort
+      })
+    });
+    
+    const data = await res.json();
+    if (data.code === 200) {
+      ElMessage.success('添加选项成功');
+      // 重新获取题目列表以更新显示
+      await getQuestion(props.departmentId);
+      // 重新加载当前题目详情
+      const updatedQuestions = await getQuestion(props.departmentId);
+      if (updatedQuestions && Array.isArray(updatedQuestions)) {
+        const updatedQuestion = updatedQuestions.find(q => q.id === questionId);
+        if (updatedQuestion) {
+          currentQuestion.value = updatedQuestion;
+        }
+      }
+    } else {
+      ElMessage.error(data.msg || '添加选项失败');
+    }
+  } catch (error) {
+    if (error === 'cancel') {
+      // 用户取消输入
+      return;
+    }
+    console.error('添加选项失败:', error);
+    ElMessage.error('添加选项失败，请重试');
   }
 };
 
@@ -317,25 +534,29 @@ const formdata = ref({
     content:'',
     sort:0,
     option:[
-      {
-        optionContent:'',
-        optionSort:0
-      },
-      {
-        optionContent:'',
-        optionSort:1
-      },
-      {
-        optionContent:'',
-        optionSort:2
-      },
-      {
-        optionContent:'',
-        optionSort:3
+    {
+      id: 0,
+      optionContent:'',
+      optionSort:0
+    },
+    {
+      id: 0,
+      optionContent:'',
+      optionSort:1
+    },
+    {
+      id: 0,
+      optionContent:'',
+      optionSort:2
+    },
+    {
+      id: 0,
+      optionContent:'',
+      optionSort:3
 
-      }
+    }
 
-    ]
+  ]
 })
 
 
@@ -354,15 +575,23 @@ async function addQuestions() {
 
     // 确保选项格式正确，使用"option"而不是"options"
     if (typeData.value === 3) {
-      formDataObj.option = [
-      ]; // 改为与示例一致的"option"
+      formDataObj.option = []; // 改为与接口一致的"option"
     }
 
     // 确保allQuestions在正确的作用域内
     let allQuestions = [];
     if (data !== null && Array.isArray(data)) {
-      formDataObj.sort = data.length + 1;
-      allQuestions = [...data, formDataObj];
+      // 检查是否是编辑操作（存在id）
+      if (formDataObj.id) {
+        // 如果是编辑操作，替换现有问题
+        allQuestions = data.map(question => 
+          question.id === formDataObj.id ? formDataObj : question
+        );
+      } else {
+        // 如果是新增操作，添加到列表末尾
+        formDataObj.sort = data.length + 1;
+        allQuestions = [...data, formDataObj];
+      }
     } else {
       formDataObj.sort = 1; // 第一个问题排序为1
       allQuestions = [formDataObj];
@@ -370,14 +599,14 @@ async function addQuestions() {
 
     // 验证并修正option格式（如果需要）
     allQuestions.forEach(question => {
-      // 确保存在option属性且为数组
-      if (!question.option) question.option = [];
-      // 如果之前用了options，这里可以迁移数据
-      if (question.options && !question.option.length) {
-        question.option = question.options;
-        delete question.options;
-      }
-    });
+    // 确保存在option属性且为数组
+    if (!question.option) question.option = [];
+    // 如果之前用了options，这里可以迁移数据
+    if (question.options && !question.option.length) {
+      question.option = question.options;
+      delete question.options;
+    }
+  });
 
     console.log('表格数据', formDataObj);
     console.log('请求数据', allQuestions);
@@ -395,6 +624,7 @@ async function addQuestions() {
     if (data2.code === 200) {
       ElMessage.success('添加成功');
       getQuestion(props.departmentId);
+      // 成功后重置表单，包含id字段以便区分新增和编辑操作
       showEdit.value = false;
       showQuestionEdit.value=false;
       formdata.value={
@@ -659,6 +889,7 @@ try {
 .option-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
   padding: 10px 15px;
@@ -675,6 +906,12 @@ try {
 
 .option-item .el-input {
   flex: 1;
+}
+
+.button-container {
+  display: flex;
+  align-items: center;
+  height: 100%;
 }
 
 /* 美化按钮样式 */

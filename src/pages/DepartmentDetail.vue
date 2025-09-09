@@ -321,6 +321,7 @@
 	.tab-content {
 		padding: 32px;
 		animation: fadeInUp 0.6s ease;
+		min-height: 800px;
 	}
 
 	@keyframes fadeInUp {
@@ -696,6 +697,7 @@
 
 		.tab-content {
 			padding: 20px;
+			min-height: 800px;
 		}
 
 		.department-title {
