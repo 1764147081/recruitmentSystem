@@ -274,3 +274,14 @@ export function getScore(finishedId){
     throw err;
   });
 }
+
+export function exportExcel(departId){
+  return service({
+    url: `/excel/download?departId=${departId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+} 

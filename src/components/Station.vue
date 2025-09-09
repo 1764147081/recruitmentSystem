@@ -4,6 +4,7 @@
 		<el-input v-model="searchUsername" placeholder="请输入学号或姓名进行搜索" clearable style="width: 300px;" />
 		<el-button type="primary" @click="getFinishByUsername" style="margin-left: 10px;">搜索</el-button>
 		<el-button type="warning" @click="getCurrentAnswers" style="margin-left: 10px;">取消</el-button>
+		<el-button type="primary" @click="getExcel" style="margin-left: 10px;">导出表格</el-button>
 		<el-table :data="userInfo" style="width: 100%" v-if="!show">
 			<el-table-column prop="name" label="姓名" width="200" />
 			<el-table-column prop="college" label="学院" width="200" />
@@ -205,10 +206,11 @@ finally{
 }
 
 import { reactive } from 'vue'
-import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId, getQuestionnaire,getFinishedByUsername ,getFinishedByName,submitScore,getScore} from '../services/user';
+import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId, getQuestionnaire,getFinishedByUsername ,getFinishedByName,submitScore,getScore,exportExcel} from '../services/user';
 import { onMounted } from 'vue';
 import { te } from 'element-plus/es/locales.mjs'
 import { ElMessage } from 'element-plus'
+
 let sort = 0;
 interface User {
 	username: number,
@@ -521,6 +523,17 @@ async function getCurrentScore(){
 		} catch (error) {
 			console.log("发生错误:", error);
 		}
+	}
+}
+
+async function getExcel(){
+	try {
+		const res = await exportExcel(props.departmentId)
+		if(res.code === 200){
+			ElMessage.success('导出成功')
+		}
+	} catch (error) {
+		console.log("发生错误:", error);
 	}
 }
 </script>
