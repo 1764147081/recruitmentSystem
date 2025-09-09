@@ -1,7 +1,7 @@
 <template>
 	<div v-loading="loading" element-loading-text="加载中..." element-loading-background="rgba(255, 255, 255, 0.8)"
 		class="loading-container">
-		<el-input v-model="searchUsername" placeholder="请输入学号进行搜索" clearable style="width: 300px;" />
+		<el-input v-model="searchUsername" placeholder="请输入学号或姓名进行搜索" clearable style="width: 300px;" />
 		<el-button type="primary" @click="getFinishByUsername" style="margin-left: 10px;">搜索</el-button>
 		<el-button type="warning" @click="getCurrentAnswers" style="margin-left: 10px;">取消</el-button>
 		<el-table :data="userInfo" style="width: 100%" v-if="!show">
@@ -200,8 +200,9 @@ finally{
 }
 
 import { reactive } from 'vue'
-import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId, getQuestionnaire,getFinishedByUsername } from '../services/user';
+import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId, getQuestionnaire,getFinishedByUsername ,getFinishedByName} from '../services/user';
 import { onMounted } from 'vue';
+import { te } from 'element-plus/es/locales.mjs'
 let sort = 0;
 interface User {
 	username: number,
@@ -332,79 +333,123 @@ watch(() => props.departmentId, async (newVal) => {
 	}
 })
 
-    const searchUsername = ref(0||null)
+    const searchUsername = ref<number|string>()
 	const questionnaireId = ref(0)
 	
-	async function fetchQuestionnaire() {
+async function fetchQuestionnaire() {
   try {
     const result = await getQuestionnaire(props.departmentId);
-    if(result.code===200){
-        questionnaireId.value=result.data.id;
+    if (result.code === 200) {
+      questionnaireId.value = result.data.id;
     }
   } catch (error) {
     console.error("发生错误:", error);
   }
 }
-   
-   async function getFinishByUsername() {
-		try {
-			userInfo.value = []
-			const result = await getFinishedByUsername(searchUsername.value,questionnaireId.value);
-			if (result.code === 200) {
-				console.log("获取到的个人问卷数据:",result.data)
 
-					const tempUsers : User[] = []
-					if(searchUsername.value!=null)
-					{try {
-						const userDetail = await getUserInfoByUsername(searchUsername.value)
-						console.log('用户详情:', userDetail)
+async function getFinishByUsername() {
+  // 调整条件：判断是否为有效数字（包括number类型或纯数字字符串）
+  const value = searchUsername.value;
+  const isNumber = typeof value === 'number' || 
+                  (typeof value === 'string' && /^\d+$/.test(value.trim()));
 
-						if (userDetail.code === 200 && userDetail.data ) {
-							tempUsers.push({
-								username: searchUsername.value,
-								college: userDetail.data.college || '',
-								name: userDetail.data.name || '',
-								finishedId: result.data.id,
-								qq: userDetail.data.qq || '',
-								email: userDetail.data.email || '',
-								profile: userDetail.data.profile || '',
-								major: userDetail.data.major || ''
-							})
-						} else {
-							// 如果获取详情失败，至少保留用户名
-							tempUsers.push({
-								username: searchUsername.value,
-								college: '无权访问',
-								name: '无权访问',
-								finishedId: result.data.id,
-								qq: '无权访问',
-								email: '无权访问',
-								profile: '无权访问',
-								major: '无权访问',
-							})
-						}
-					} catch (error) {
-						console.log(`获取用户${searchUsername.value}信息失败:`, error)
-						tempUsers.push({
-							username: searchUsername.value,
-							college: '获取失败',
-							name: '获取失败',
-							finishedId: result.data.id,
-							qq: '',
-							email: '',
-							profile: '',
-							major: '',
-						})
-					}
+  if (isNumber) {
+    try {
+      userInfo.value = [];
+      // 若为字符串类型的数字，转换为number（根据接口需求决定是否需要）
+      const username = typeof value === 'string' ? Number(value) : value;
+      const result = await getFinishedByUsername(username, questionnaireId.value);
+      
+      if (result.code === 200) {
+        console.log("获取到的个人问卷数据:", result.data);
+        const tempUsers: User[] = [];
 
-                  userInfo.value = tempUsers
-			}
-		}} catch (error) {
-			console.error("发生错误:", error);
-			userInfo.value = []
-		}
-		
-	}
+        try {
+          const userDetail = await getUserInfoByUsername(username);
+          console.log('用户详情:', userDetail);
+
+          if (userDetail.code === 200 && userDetail.data) {
+            tempUsers.push({
+              username: username,
+              college: userDetail.data.college || '',
+              name: userDetail.data.name || '',
+              finishedId: result.data.id,
+              qq: userDetail.data.qq || '',
+              email: userDetail.data.email || '',
+              profile: userDetail.data.profile || '',
+              major: userDetail.data.major || ''
+            });
+          } else {
+            tempUsers.push({
+              username: username,
+              college: '无权访问',
+              name: '无权访问',
+              finishedId: result.data.id,
+              qq: '无权访问',
+              email: '无权访问',
+              profile: '无权访问',
+              major: '无权访问',
+            });
+          }
+        } catch (error) {
+          console.log(`获取用户${username}信息失败:`, error);
+          tempUsers.push({
+            username: username,
+            college: '获取失败',
+            name: '获取失败',
+            finishedId: result.data.id,
+            qq: '',
+            email: '',
+            profile: '',
+            major: '',
+          });
+        }
+
+        userInfo.value = tempUsers;
+      }
+    } catch (error) {
+      console.error("发生错误:", error);
+      userInfo.value = [];
+    }
+  }else{
+    try {
+      userInfo.value = [];
+	  // 若为字符串类型的数字，转换为number（根据接口需求决定是否需要）
+      const username = typeof value === 'string' ? value :  String(value);  
+      const result = await getFinishedByName(searchUsername.value, props.departmentId);
+	  const tempUsers: User[] = [];
+      if (result.code === 200) {
+		 console.log("获取到的个人问卷数据:", result.data);
+		tempUsers.push({
+			username:result.data[0].username||'',
+			college:result.data[0].college||'',
+			name:username,
+			finishedId:result.data[0].id||'',
+			qq:'',
+			email:'',
+			profile:'',
+			major:'',
+		})
+      userInfo.value = tempUsers;
+      }else{
+       tempUsers.push({
+			username:0,
+			college:'无权访问',
+			name:username,
+			finishedId:0,
+			qq:'',
+			email:'',
+			profile:'',
+			major:'',
+		})
+      }
+    } catch (error) {
+      console.error("发生错误:", error);
+      userInfo.value = [];
+    }
+  }
+
+}
 
 
 async function getFinish() {

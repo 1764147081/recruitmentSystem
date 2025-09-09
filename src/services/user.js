@@ -240,4 +240,17 @@ export function deleteQuestion(questionId,departmentId){
 
 
 
+export function getFinishedByName(name,departmentId){
+  return service({
+    url: `/screen/?name=${name}&departmentId=${departmentId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
+
+
+
 
