@@ -1,6 +1,9 @@
 <template>
 	<div v-loading="loading" element-loading-text="加载中..." element-loading-background="rgba(255, 255, 255, 0.8)"
 		class="loading-container">
+		<el-input v-model="searchUsername" placeholder="请输入学号进行搜索" clearable style="width: 300px;" />
+		<el-button type="primary" @click="getFinishByUsername" style="margin-left: 10px;">搜索</el-button>
+		<el-button type="warning" @click="getCurrentAnswers" style="margin-left: 10px;">取消</el-button>
 		<el-table :data="userInfo" style="width: 100%" v-if="!show">
 			<el-table-column prop="name" label="姓名" width="200" />
 			<el-table-column prop="college" label="学院" width="200" />
@@ -304,6 +307,7 @@ onMounted(async () => {
 	if (props.departmentId) {
 		try {
 			await getFinish() // 等待获取完成
+			await fetchQuestionnaire()
 		} catch (error) {
 			console.log(error)
 			userInfo.value = []
@@ -317,12 +321,88 @@ watch(() => props.departmentId, async (newVal) => {
 	if (newVal) {
 		try {
 			await getFinish() // 等待获取完成
+			await fetchQuestionnaire()
 		} catch (error) {
 			console.log(error)
 			userInfo.value = []
 		}
 	}
 })
+
+    const searchUsername = ref(0||null)
+	const questionnaireId = ref(0)
+	
+	async function fetchQuestionnaire() {
+  try {
+    const result = await getQuestionnaire(props.departmentId);
+    if(result.code===200){
+        questionnaireId.value=result.data.id;
+    }
+  } catch (error) {
+    console.error("发生错误:", error);
+  }
+}
+   
+   async function getFinishByUsername() {
+		try {
+			userInfo.value = []
+			const result = await getFinishedByUsername(searchUsername.value,questionnaireId.value);
+			if (result.code === 200) {
+				console.log("获取到的个人问卷数据:",result.data)
+
+					const tempUsers : User[] = []
+					if(searchUsername.value!=null)
+					{try {
+						const userDetail = await getUserInfoByUsername(searchUsername.value)
+						console.log('用户详情:', userDetail)
+
+						if (userDetail.code === 200 && userDetail.data ) {
+							tempUsers.push({
+								username: searchUsername.value,
+								college: userDetail.data.college || '',
+								name: userDetail.data.name || '',
+								finishedId: result.data.id,
+								qq: userDetail.data.qq || '',
+								email: userDetail.data.email || '',
+								profile: userDetail.data.profile || '',
+								major: userDetail.data.major || ''
+							})
+						} else {
+							// 如果获取详情失败，至少保留用户名
+							tempUsers.push({
+								username: searchUsername.value,
+								college: '无权访问',
+								name: '无权访问',
+								finishedId: result.data.id,
+								qq: '无权访问',
+								email: '无权访问',
+								profile: '无权访问',
+								major: '无权访问',
+							})
+						}
+					} catch (error) {
+						console.log(`获取用户${searchUsername.value}信息失败:`, error)
+						tempUsers.push({
+							username: searchUsername.value,
+							college: '获取失败',
+							name: '获取失败',
+							finishedId: result.data.id,
+							qq: '',
+							email: '',
+							profile: '',
+							major: '',
+						})
+					}
+
+                  userInfo.value = tempUsers
+			}
+		}} catch (error) {
+			console.error("发生错误:", error);
+			userInfo.value = []
+		}
+		
+	}
+
 
 async function getFinish() {
 	try {
