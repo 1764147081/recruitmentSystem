@@ -56,11 +56,37 @@
               <el-form-item  prop="password">
                 <el-input v-model="form2.password" placeholder="请输入密码" show-password></el-input>
               </el-form-item>
+              <el-form-item class="captcha-container">
+                <div class="captcha-input-group">
+                  <el-input 
+                    v-model="form2.captcha" 
+                    placeholder="请输入验证码" 
+                    :disabled="!captchaSent"
+                    class="captcha-input"
+                  ></el-input>
+                  <el-button 
+                    @click="sendCaptcha" 
+                    :disabled="captchaLoading || !form2.studentNumber || !form2.password"
+                    :loading="captchaLoading"
+                    class="captcha-button"
+                    type="info"
+                  >
+                    {{ captchaButtonText }}
+                  </el-button>
+                </div>
+              </el-form-item>
               <el-form-item class="auto-login-checkbox">
                 <el-checkbox v-model="form2.autoLogin" label="自动登录" size="small"></el-checkbox>
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" @click="handleLoginTwo" class="login-button">登录</el-button>
+                <el-button 
+                  type="primary" 
+                  @click="handleLoginTwo" 
+                  class="login-button"
+                  :disabled="!captchaSent || !form2.captcha"
+                >
+                  登录
+                </el-button>
               </el-form-item>
             </el-form>
           </div>
@@ -88,8 +114,14 @@ const form1 = reactive({
 const form2 = reactive({
     studentNumber: '',
     password: '',
-    autoLogin: false
+    autoLogin: false,
+    captcha: ''
 })
+
+// 验证码相关状态
+const captchaSent = ref(false)
+const captchaLoading = ref(false)
+const captchaButtonText = ref('发送验证码')
 const user = useUserStore()
 
 // 登录
@@ -144,84 +176,136 @@ async function handleLoginOne(){
     ElMessage.error('登录失败，请重试');
   }
 }
-// 统一认证登录
+/**
+ * 发送验证码函数
+ * 向服务器请求验证码，处理成功和失败的情况
+ */
+async function sendCaptcha() {
+  if (!form2.studentNumber || !form2.password) {
+    ElMessage.error('请先输入学号和密码');
+    return;
+  }
 
-async function handleLoginTwo(){
-   user.changeStudentNumber(form2.studentNumber)
-   user.changePassword(form2.password)
-   user.changeAutoLogin(form2.autoLogin)
-
-   console.log(user.getStudentNumber);
-   console.log(user.getPassword);
-   console.log(user.getAutoLogin);
-   console.log(typeof user.getStudentNumber)
+  captchaLoading.value = true;
+  captchaButtonText.value = '发送中...';
 
   try {
- const queryParams = new URLSearchParams({
-  studentNumber: user.getStudentNumber,
-  password: user.getPassword,
-  fingerprint: user.getStudentNumber
-});
-
-const response = await fetch(`${baseURL}/user/login/cas?${queryParams}`, {
-  method: "POST",
-  headers: {
-    'Content-Type': 'application/x-www-form-urlencoded' 
-  }
-});
-  
-  const message = await response.json();
-  console.log(message);
-
-  if (message.code === 200) {
-    router.push('/');
-    user.changeToken(message.data);
-  } else if (message.code === 400) {
-    // 弹窗获取验证码
-    const { value } = await ElMessageBox.prompt('请输入验证码', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
+    const queryParams = new URLSearchParams({
+      studentNumber: form2.studentNumber,
+      password: form2.password,
+      fingerprint: form2.studentNumber
     });
 
-    // 带验证码的第二次请求
-    const queryParams2 = new URLSearchParams({
-     studentNumber: user.getStudentNumber,
-     password: user.getPassword,
-     fingerprint: user.getStudentNumber,
-     captcha: value
-
-});
-    const secondResponse = await fetch(`${baseURL}/user/login/cas?${queryParams2}`, {
+    const response = await fetch(`${baseURL}/user/login/cas?${queryParams}`, {
       method: "POST",
       headers: {
-        'Content-Type': 'application/json'
-      },
+        'Content-Type': 'application/x-www-form-urlencoded' 
+      }
     });
+    
+    const message = await response.json();
+    console.log(message);
 
-    const secondMessage = await secondResponse.json();
-    if (secondMessage.code === 200) {
-      user.changeToken(secondMessage.data);
-      user.changeIsLogin()
-      console.log(user.getToken);
+    if (message.code === 200) {
+      // 直接登录成功，不需要验证码
+      user.changeStudentNumber(form2.studentNumber);
+      user.changePassword(form2.password);
+      user.changeAutoLogin(form2.autoLogin);
+      user.changeToken(message.data);
+      user.changeIsLogin();
       
       // 根据自动登录选项设置token存储
       if (form2.autoLogin) {
-        // 长期存储
-        localStorage.setItem('token', secondMessage.data);
+        localStorage.setItem('token', message.data);
         localStorage.setItem('autoLogin', 'true');
       } else {
-        // 短期存储
-        sessionStorage.setItem('token', secondMessage.data);
+        sessionStorage.setItem('token', message.data);
         localStorage.setItem('autoLogin', 'false');
       }
       
       router.push('/');
+    } else if (message.code === 400) {
+      // 需要验证码
+      captchaSent.value = true;
+      captchaButtonText.value = '重新发送';
+      ElMessage.success('验证码已发送，请查收');
+    } else if (message.code === 40002) {
+      // 密码错误提示
+      ElMessage.error('账号或密码错误，请检查后重试');
+    } else {
+      ElMessage.error('发送验证码失败，请重试');
+    }
+  } catch (err) {
+    console.error("发送验证码失败:", err);
+    ElMessage.error('发送验证码失败，请重试');
+  } finally {
+    captchaLoading.value = false;
+    if (!captchaSent.value) {
+      captchaButtonText.value = '发送验证码';
     }
   }
-} catch (err) {
-  console.error("登录失败:", err);
-  this.$message.error('登录失败，请重试');
 }
+
+/**
+ * 统一认证登录函数
+ * 使用验证码进行登录
+ */
+async function handleLoginTwo(){
+  if (!captchaSent.value || !form2.captcha) {
+    ElMessage.error('请先获取验证码');
+    return;
+  }
+
+  user.changeStudentNumber(form2.studentNumber);
+  user.changePassword(form2.password);
+  user.changeAutoLogin(form2.autoLogin);
+
+  try {
+    // 带验证码的登录请求
+    const queryParams = new URLSearchParams({
+      studentNumber: user.getStudentNumber,
+      password: user.getPassword,
+      fingerprint: user.getStudentNumber,
+      captcha: form2.captcha
+    });
+
+    const response = await fetch(`${baseURL}/user/login/cas?${queryParams}`, {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+    });
+
+    const message = await response.json();
+    console.log(message);
+
+    if (message.code === 200) {
+      user.changeToken(message.data);
+      user.changeIsLogin();
+      
+      // 根据自动登录选项设置token存储
+      if (form2.autoLogin) {
+        localStorage.setItem('token', message.data);
+        localStorage.setItem('autoLogin', 'true');
+      } else {
+        sessionStorage.setItem('token', message.data);
+        localStorage.setItem('autoLogin', 'false');
+      }
+      
+      router.push('/');
+    } else if (message.code === 401) {
+      // 验证码错误提示
+      ElMessage.error('验证码错误，请重新输入');
+      // 清空验证码输入框
+      form2.captcha = '';
+    } else {
+      // 其他错误提示
+      ElMessage.error('登录失败，请重试');
+    }
+  } catch (err) {
+    console.error("登录失败:", err);
+    ElMessage.error('登录失败，请重试');
+  }
 }
 
 </script>
@@ -245,7 +329,8 @@ const response = await fetch(`${baseURL}/user/login/cas?${queryParams}`, {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  height: 100vh;
+  min-height: 100vh;
+  overflow-y: auto;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
   padding-top: 100px;
@@ -384,8 +469,10 @@ const response = await fetch(`${baseURL}/user/login/cas?${queryParams}`, {
   .demo-form-inline :deep(.el-form-item) {
   width: 100%;
   max-width: 200px;
-  display: flex;
-  justify-content: center;
+}
+
+.demo-form-inline :deep(.el-form-item:last-of-type) {
+    max-width: 100%;
 }
 
   .demo-form-inline :deep(.el-input) {
@@ -393,9 +480,19 @@ const response = await fetch(`${baseURL}/user/login/cas?${queryParams}`, {
 }
 
 .login-button {
+  display: block;
   width: 100%;
-  margin-top: 20px;
-  align-self: center;
+  max-width: 200px;
+  margin: 20px auto 0;
+}
+
+/* 确保disabled状态的登录按钮也可见 */
+.login-button:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+  background-color: #a0cfff !important;
+  border-color: #a0cfff !important;
+  color: #ffffff !important;
 }
 
 :deep(.el-form-item__label) {
@@ -419,6 +516,97 @@ const response = await fetch(`${baseURL}/user/login/cas?${queryParams}`, {
 .auto-login-checkbox :deep(.el-checkbox__label) {
   font-size: 14px;
   padding-left: 5px;
+}
+
+/* 验证码相关样式 */
+.captcha-container {
+  width: 100%;
+  max-width: 200px;
+}
+
+.captcha-input-group {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.captcha-input {
+  flex: 1;
+}
+
+.captcha-button {
+  white-space: nowrap;
+  font-size: 12px;
+  padding: 0 12px;
+  min-width: 80px;
+}
+
+.captcha-button:disabled {
+  opacity: 0.6;
+}
+
+/* 响应式设计 - 小屏幕适配 */
+@media (max-width: 768px) {
+  .login {
+    padding: 10px;
+    padding-top: 80px;
+  }
+  
+  .loginHeader {
+    height: 80px;
+    max-width: 100%;
+    margin: 0 -10px;
+  }
+  
+  .login-toggle {
+    max-width: 100%;
+    margin: 0 -10px;
+  }
+  
+  .form-container {
+    padding: 20px 15px;
+  }
+  
+  .demo-form-inline :deep(.el-form-item) {
+    max-width: 100%;
+  }
+  
+  .captcha-input-group {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .captcha-button {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .login {
+    padding: 5px;
+    padding-top: 70px;
+  }
+  
+  .loginHeader {
+    height: 70px;
+  }
+  
+  #logo {
+    height: 40px;
+  }
+  
+  .form-container {
+    padding: 15px 10px;
+  }
+  
+  .login-type-header h3 {
+    font-size: 18px;
+  }
+  
+  .login-type-header p {
+    font-size: 12px;
+  }
 }
 
 </style>
