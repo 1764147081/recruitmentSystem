@@ -208,7 +208,7 @@ finally{
 import { reactive } from 'vue'
 import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId, getQuestionnaire,getFinishedByUsername ,getFinishedByName,submitScore,getScore,exportExcel} from '../services/user';
 import { onMounted } from 'vue';
-import { te } from 'element-plus/es/locales.mjs'
+import { el, te } from 'element-plus/es/locales.mjs'
 import { ElMessage } from 'element-plus'
 
 let sort = 0;
@@ -538,6 +538,9 @@ async function getExcel(){
 		const res = await exportExcel(props.departmentId)
 		if(res.code === 200){
 			ElMessage.success('导出成功')
+		}else{
+			ElMessage.error('导出失败')
+			console.log(res.code)
 		}
 	} catch (error) {
 		console.log("发生错误:", error);
