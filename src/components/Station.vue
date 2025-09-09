@@ -495,8 +495,13 @@ async function getAnswer(row: User) {
 const score = ref(0)
 const setScore = ref(0||null)
 async function submitScores() {
+	
 	if(setScore.value !== null){
-		try {
+		if(setScore.value>10){
+		ElMessage.error('评分不能超过10分')
+		return
+	    }else{
+				try {
 		const result = await submitScore(finishId.value,setScore.value);
 		if (result.code === 200) {
 			console.log(result.data)
@@ -507,6 +512,8 @@ async function submitScores() {
 	} catch (error) {
 		console.log("发生错误:", error);
 	}
+		}
+	
 	}
 	
 }
