@@ -29,6 +29,7 @@
 			<el-button type="danger" @click="show = false">关闭</el-button>
 			<div class="SignUpsName">{{ form.name }}</div>
 			<div class="SignUpsUsername">学号：{{ form.username }}</div>
+			<div class="showScore" >当前评分：{{ score }}</div>
 			<el-card v-for="item in answerInfo" :key="item.content" class="question-card" shadow="hover">
 				<div class="question-header">
 					<span class="question-icon"><el-icon>
@@ -43,6 +44,8 @@
 					</div>
 				</div>
 			</el-card>
+			<el-input v-model="setScore" placeholder="请输入评分"  style="width: 300px;" />
+			<el-button type="primary" @click="submitScores" style="margin-left: 10px;">提交评分</el-button>
 		</div>
 
 		<el-dialog title="个人信息" v-model="showUserInfo" width="50%">
@@ -202,9 +205,10 @@ finally{
 }
 
 import { reactive } from 'vue'
-import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId, getQuestionnaire,getFinishedByUsername ,getFinishedByName} from '../services/user';
+import { getFinishedQuestionnaire, getQuestionnaireDetailedById, getUserInfoByUsername, getAnswerByFinishedId, getQuestionnaire,getFinishedByUsername ,getFinishedByName,submitScore,getScore} from '../services/user';
 import { onMounted } from 'vue';
 import { te } from 'element-plus/es/locales.mjs'
+import { ElMessage } from 'element-plus'
 let sort = 0;
 interface User {
 	username: number,
@@ -261,22 +265,6 @@ const handleClick = async (row: User) => {
 	const res1 = await getAnswer(row)
 	const res2 = await getQuestion()
 	console.log(res1, res2);
-	// for (let i = 0; i < res1.length; i++) {
-	// 	list.push({
-	// 		content: res2[i].content,
-	// 		answer: ''
-	// 	})
-	// 	if (res1[i].optionId !== null) {
-	// 		for (let j = 0; j < res2[i].option.length; j++) {
-	// 			if (res1[i].optionId === res2[i].option[j].optionId) {
-	// 				list[i].answer = res2[i].option[j].optionContent
-	// 			}
-	// 		}
-	// 	} else {
-	// 		list[i].answer = res1[i].answerContent
-	// 	}
-
-	// }
 	for (let i = 0; i < res2.length; i++) {
 		list.push({
 			content: res2[i].content,
@@ -328,6 +316,7 @@ watch(() => props.departmentId, async (newVal) => {
 			await getFinish() // 等待获取完成
 			await fetchQuestionnaire()
 			await getCurrentAnswers()
+			show.value = false
 		} catch (error) {
 			console.log(error)
 			userInfo.value = []
@@ -483,18 +472,56 @@ async function getQuestion() {
 	}
 }
 
+const finishId = ref(0)
 async function getAnswer(row: User) {
 
 	try {
 		const result = await getAnswerByFinishedId(row.finishedId);
+		finishId.value = row.finishedId
 		if (result.code === 200) {
 			console.log(result.data)
+			getCurrentScore()
 		}
 		return result.data
 	} catch (error) {
 		console.log("发生错误:", error);
 	}
 
+}
+
+
+const score = ref(0)
+const setScore = ref(0||null)
+async function submitScores() {
+	if(setScore.value !== null){
+		try {
+		const result = await submitScore(finishId.value,setScore.value);
+		if (result.code === 200) {
+			console.log(result.data)
+			ElMessage.success('评分成功')
+			setScore.value = null
+			await getCurrentScore()
+		}
+	} catch (error) {
+		console.log("发生错误:", error);
+	}
+	}
+	
+}
+
+
+async function getCurrentScore(){
+	if(finishId.value !== 0){
+		try {
+			const result = await getScore(finishId.value);
+			if (result.code === 200) {
+				console.log(result.data)
+				score.value = result.data
+			}
+		} catch (error) {
+			console.log("发生错误:", error);
+		}
+	}
 }
 </script>
 
@@ -670,5 +697,11 @@ async function getAnswer(row: User) {
   color: #606266;
   margin-bottom: 20px;
   padding-left: 5px;
+}
+.showScore{
+	font-size: 14px;
+	color: #606266;
+	margin-bottom: 20px;
+	padding-left: 5px;
 }
 </style>

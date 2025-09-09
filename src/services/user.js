@@ -253,4 +253,24 @@ export function getFinishedByName(name,departmentId){
 
 
 
+export function submitScore(finishedId,score){
+  return service({
+    url: `/answer/estimate?finishId=${finishedId}&score=${score}`,
+    method: 'post'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
 
+export function getScore(finishedId){
+  return service({
+    url: `/answer/score?finishId=${finishedId}`,
+    method: 'get'
+  }).then(res => {
+    return res.data;
+  }).catch(err => {
+    throw err;
+  });
+}
