@@ -414,7 +414,6 @@ async function getFinishByUsername() {
   }else{
     try {
       userInfo.value = [];
-	  // 若为字符串类型的数字，转换为number（根据接口需求决定是否需要）
       const username = typeof value === 'string' ? value :  String(value);  
       const result = await getFinishedByName(searchUsername.value, props.departmentId);
 	  const tempUsers: User[] = [];
