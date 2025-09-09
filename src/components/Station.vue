@@ -535,13 +535,7 @@ async function getCurrentScore(){
 
 async function getExcel(){
 	try {
-		const res = await exportExcel(props.departmentId)
-		if(res.code === 200){
-			ElMessage.success('导出成功')
-		}else{
-			ElMessage.error('导出失败')
-			console.log(res.code)
-		}
+		const res = await exportExcel(props.departmentId);
 	} catch (error) {
 		console.log("发生错误:", error);
 	}

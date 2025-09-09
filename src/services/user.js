@@ -275,13 +275,33 @@ export function getScore(finishedId){
   });
 }
 
-export function exportExcel(departId){
+export function exportExcel(departmentId) {
   return service({
-    url: `/excel/download?departId=${departId}`,
-    method: 'get'
+    url: `/excel/download?departId=${departmentId}`,
+    method: 'get',
+    responseType: 'blob' // 关键：指定响应为二进制流
   }).then(res => {
+    // 处理二进制流，触发文件下载
+    const blob = new Blob([res.data], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' // Excel文件类型
+    });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    // 从响应头获取文件名（需后端配合设置Content-Disposition）
+    const contentDisposition = res.headers['content-disposition'];
+    const fileName = contentDisposition 
+      ? decodeURIComponent(contentDisposition.split('filename=')[1])
+      : '导出数据.xlsx'; // 默认文件名
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    // 清理资源
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
     return res.data;
   }).catch(err => {
+    console.error('下载失败', err);
     throw err;
   });
-} 
+}
